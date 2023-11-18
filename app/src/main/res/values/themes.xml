@@ -3,6 +3,9 @@
     <style name="Base.Theme.PlantCare" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="android:statusBarColor">@color/dark_green</item>
+        <item name="android:navigationBarColor">@color/dark_green</item>
+        <item name="actionMenuTextColor">@color/white</item>
     </style>
 
     <style name="Theme.PlantCare" parent="Base.Theme.PlantCare" />
