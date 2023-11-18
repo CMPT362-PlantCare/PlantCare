@@ -26,7 +26,7 @@
             style="@style/EditTextInner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Type your Email"
+            android:hint="@string/enter_your_email"
             android:inputType="textEmailAddress" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -50,7 +50,7 @@
             style="@style/EditTextInner"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter Your Password"
+            android:hint="@string/enter_your_password"
             android:inputType="textPassword" />
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -60,7 +60,7 @@
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="16dp"
         android:background="@color/dark_green"
-        android:text="Login"
+        android:text="@string/login"
         android:textColor="@color/white"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -74,7 +74,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/black"
         android:textSize="16sp"
-        android:text="Not Registered Yet? Sign Up"
+        android:text="@string/not_registered_yet_sign_up"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"

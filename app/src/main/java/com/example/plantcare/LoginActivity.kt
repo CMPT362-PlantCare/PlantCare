@@ -18,9 +18,13 @@ class LoginActivity : AppCompatActivity() {
 
         binding = ActivityLoginBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         firebaseAuth = Firebase.auth
 
+        handleLogin()
+        handleSignupPageRoute()
+    }
+
+    private fun handleLogin() {
         binding.loginButton.setOnClickListener {
             val userEmail = binding.emailEditText.text.toString()
             val userPassword = binding.enterPasswordEditText.text.toString()
@@ -47,7 +51,9 @@ class LoginActivity : AppCompatActivity() {
                 Toast.makeText(this, "Please Fill All Fields", Toast.LENGTH_SHORT).show()
             }
         }
+    }
 
+    private fun handleSignupPageRoute() {
         binding.signupLink.setOnClickListener {
             val signupActivityIntent = Intent(this, SignupActivity::class.java)
             startActivity(signupActivityIntent)
