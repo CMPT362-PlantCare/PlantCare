@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">PlantCare</string>
+    <string name="user_email_intent_tag">user-email-intent-tag</string>
 </resources>
