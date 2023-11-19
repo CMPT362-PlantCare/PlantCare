@@ -32,10 +32,10 @@ class DashboardActivity : AppCompatActivity() {
 
         userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
 
-        binding.greetingTextView.text = "Hello, " + this.userEmail
+        binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
-        gridView = findViewById(R.id.gridView)
-        addButton = findViewById(R.id.addButton)
+        gridView =  binding.gridView
+        addButton = binding.addButton
 
         /* SAMPLE ARRAYS */
         val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
