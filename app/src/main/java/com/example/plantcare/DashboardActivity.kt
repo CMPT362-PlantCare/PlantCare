@@ -51,7 +51,13 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         addButton.setOnClickListener(){
-            /* adding plants */
+            val addPlantActivityIntent =
+                Intent(this, AddPlantActivity::class.java)
+            addPlantActivityIntent.putExtra(
+                getString(R.string.user_email_intent_tag),
+                userEmail
+            )
+            startActivity(addPlantActivityIntent)
         }
 
     }

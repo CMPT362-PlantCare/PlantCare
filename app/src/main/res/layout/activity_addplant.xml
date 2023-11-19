@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/plain_bg"
+    tools:context=".AddPlantActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+      <RelativeLayout
+          android:layout_width="wrap_content"
+          android:layout_height="wrap_content"
+          android:layout_gravity="center_horizontal">
+
+        <ImageView
+            android:id="@+id/image_view"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginStart="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginBottom="5dp" />
+
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/photo_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/dark_green"
+            android:text="change"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_toRightOf="@+id/image_view" />
+      </RelativeLayout>
+
+      <com.google.android.material.textfield.TextInputLayout
+          android:id="@+id/enter_name_layout"
+          style="@style/EditTextOuter"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="16dp"
+          android:layout_marginTop="24dp"
+          app:boxStrokeColor="@color/dark_green"
+          app:hintTextColor="@color/dark_green"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintHorizontal_bias="0.5"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toBottomOf="@id/email_layout">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/name_edit_text"
+            style="@style/EditTextInner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/plant_name"
+            android:inputType="text" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <com.google.android.material.textfield.TextInputLayout
+          android:id="@+id/enter_species_layout"
+          style="@style/EditTextOuter"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="16dp"
+          android:layout_marginTop="2dp"
+          app:boxStrokeColor="@color/dark_green"
+          app:hintTextColor="@color/dark_green"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintHorizontal_bias="0.5"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toBottomOf="@id/email_layout">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/species_edit_text"
+            style="@style/EditTextInner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/start_typing"
+            android:inputType="text" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <com.google.android.material.textfield.TextInputLayout
+          android:id="@+id/enter_size_layout"
+          style="@style/EditTextOuter"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="16dp"
+          android:layout_marginTop="2dp"
+          app:boxStrokeColor="@color/dark_green"
+          app:hintTextColor="@color/dark_green"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintHorizontal_bias="0.5"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toBottomOf="@id/email_layout">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/size_edit_text"
+            style="@style/EditTextInner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/pot_size"
+            android:inputType="number" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <TextView
+          android:id="@+id/terracotta_text_view"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:paddingLeft="10dp"
+          android:paddingTop="5dp"
+          android:paddingRight="10dp"
+          android:paddingBottom="5dp"
+          android:text="@string/terracotta_pot" />
+
+      <RadioGroup
+          android:id="@+id/radioGroup"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:orientation="horizontal"
+          android:paddingLeft="10dp"
+          android:paddingTop="5dp"
+          android:paddingRight="10dp"
+          android:paddingBottom="5dp">
+
+        <RadioButton
+            android:id="@+id/yes_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/yes" />
+
+        <RadioButton
+            android:id="@+id/no_radio_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/no" />
+      </RadioGroup>
+
+      <com.google.android.material.textfield.TextInputLayout
+          android:id="@+id/enter_age_layout"
+          style="@style/EditTextOuter"
+          android:layout_width="match_parent"
+          android:layout_height="wrap_content"
+          android:layout_marginHorizontal="16dp"
+          android:layout_marginTop="2dp"
+          app:boxStrokeColor="@color/dark_green"
+          app:hintTextColor="@color/dark_green"
+          app:layout_constraintEnd_toEndOf="parent"
+          app:layout_constraintHorizontal_bias="0.5"
+          app:layout_constraintStart_toStartOf="parent"
+          app:layout_constraintTop_toBottomOf="@id/email_layout">
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/age_edit_text"
+            style="@style/EditTextInner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/age_of_plant"
+            android:inputType="text" />
+      </com.google.android.material.textfield.TextInputLayout>
+
+      <LinearLayout
+          android:layout_width="match_parent"
+          android:layout_height="match_parent"
+          android:orientation="horizontal"
+          android:layout_gravity="bottom"
+          android:weightSum="2" >
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/cancel_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="2.5dp"
+            android:layout_marginBottom="2.5dp"
+            android:layout_weight="1"
+            android:layout_gravity="bottom"
+            android:background="@color/grey"
+            android:text="@string/cancel"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+        <androidx.appcompat.widget.AppCompatButton
+            android:id="@+id/add_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2.5dp"
+            android:layout_marginRight="5dp"
+            android:layout_marginBottom="2.5dp"
+            android:layout_weight="1"
+            android:layout_gravity="bottom"
+            android:background="@color/dark_green"
+            android:text="@string/add"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_toRightOf="@+id/cancel_button" />
+      </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

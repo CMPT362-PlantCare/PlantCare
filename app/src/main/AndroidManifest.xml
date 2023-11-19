@@ -17,6 +17,9 @@
             android:name=".DashboardActivity"
             android:exported="false" />
         <activity
+            android:name=".AddPlantActivity"
+            android:exported="false" />
+        <activity
             android:name=".LoginActivity"
             android:exported="false" />
         <activity

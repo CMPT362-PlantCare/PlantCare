@@ -17,4 +17,15 @@
     <string name="greeting_message">Hello, %s</string>
     <string name="add_button">Add Plant</string>
 
+    <!-- ADD PLANT ACTIVITY -->
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="age_of_plant">Age of plant</string>
+    <string name="add">Add</string>
+    <string name="cancel">Cancel</string>
+    <string name="terracotta_pot">Terracotta pot?</string>
+    <string name="pot_size">Pot size</string>
+    <string name="start_typing">Start typing...</string>
+    <string name="plant_name">Plant name</string>
+
 </resources>
