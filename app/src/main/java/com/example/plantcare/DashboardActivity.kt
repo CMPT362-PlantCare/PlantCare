@@ -51,7 +51,9 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         addButton.setOnClickListener(){
-            /* adding plants */
+            val addPlantActivityIntent =
+                Intent(this, AddPlantActivity::class.java)
+            startActivity(addPlantActivityIntent)
         }
 
     }
