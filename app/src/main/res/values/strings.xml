@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">PlantCare</string>
+
+    <!-- LOGIN & SIGN UP ACTIVITY -->
+
     <string name="user_email_intent_tag">user-email-intent-tag</string>
     <string name="create_your_password">Create Your Password</string>
     <string name="re_enter_your_password">Re-Enter Your Password</string>
@@ -9,4 +12,9 @@
     <string name="enter_your_password">Enter Your Password</string>
     <string name="login">Login</string>
     <string name="not_registered_yet_sign_up"><b>Not Registered Yet? <u>Sign Up</u></b></string>
+
+    <!-- DASHBOARD ACTIVITY -->
+    <string name="greeting_message">Hello, %s</string>
+    <string name="add_button">Add Plant</string>
+
 </resources>

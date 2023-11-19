@@ -5,7 +5,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DashboardActivity"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="@drawable/leaves_bg">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/dashboard_toolbar"
@@ -15,10 +16,39 @@
         android:elevation="4dp"
         app:titleTextColor="?android:textColorPrimaryInverse" />
 
-    <TextView
-        android:id="@+id/greeting_text_view"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="10dp"
-        android:textSize="30sp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_margin="15dp">
+
+        <TextView
+            android:id="@+id/greeting_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:textSize="30sp"
+            android:gravity="start"
+            android:layout_weight="1"/>
+
+        <Button app:backgroundTint="@color/dark_green"
+            android:id="@+id/addButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="16dp"
+            android:drawableLeft="@drawable/flower_icon_white"
+            android:textSize="15sp"
+            android:text="@string/add_button"
+            android:textColor="@color/white"/>
+
+    </LinearLayout>
+
+    <GridView
+        android:id="@+id/gridView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:numColumns="2" />
+
+
 </LinearLayout>
