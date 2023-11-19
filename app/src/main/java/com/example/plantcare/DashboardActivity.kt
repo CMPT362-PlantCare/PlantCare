@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.Button
 import android.widget.GridView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -18,6 +19,8 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
+    private lateinit var addButton: Button
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
@@ -27,16 +30,28 @@ class DashboardActivity : AppCompatActivity() {
 
         firebaseAuth = Firebase.auth
 
-        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!
+        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
 
         binding.greetingTextView.text = "Hello, " + this.userEmail
 
         gridView = findViewById(R.id.gridView)
+        addButton = findViewById(R.id.addButton)
 
-        var gridItemAdapter = GridItemAdapter(this)
+        /* SAMPLE ARRAYS */
+        val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
+            R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green)
+        val textSet = arrayOf("flower #1", "flower #2", "flower #3", "flower #4",
+            "flower #5", "flower #6", "flower #7", "flower #8", "flower #9")
+        /* SAMPLE ARRAYS */
+
+        var gridItemAdapter = GridItemAdapter(this, imageSet, textSet)
         gridView.adapter = gridItemAdapter
         gridView.setOnItemClickListener { adapterView, parent, position, l ->
-            Toast.makeText(this, "Click on : $position", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Click on : ${textSet[position]}", Toast.LENGTH_SHORT).show()
+        }
+
+        addButton.setOnClickListener(){
+            /* adding plants */
         }
 
     }
