@@ -12,6 +12,8 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.DatePicker
 import android.widget.TimePicker
 import androidx.activity.result.ActivityResult
@@ -23,12 +25,16 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import java.io.File
 import java.util.Calendar
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     private lateinit var binding: ActivityAddplantBinding
+    private lateinit var firebaseAuth: FirebaseAuth
     private val calendar = Calendar.getInstance()
     private lateinit var cameraResult: ActivityResultLauncher<Intent>
     private lateinit var galleryResult: ActivityResultLauncher<Intent>
@@ -39,9 +45,12 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        println("creating add plant activity")
+
+        firebaseAuth = Firebase.auth
         binding = ActivityAddplantBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        setSupportActionBar(findViewById(R.id.toolbar))
+
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
         tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
 
@@ -142,5 +151,24 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             calendar.get(Calendar.DAY_OF_MONTH)
         )
         datePickerDialog.show()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.dashboard_toolbar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                firebaseAuth.signOut()
+                val loginActivityIntent = Intent(this, LoginActivity::class.java)
+                startActivity(loginActivityIntent)
+                finish()
+                return true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
     }
 }
