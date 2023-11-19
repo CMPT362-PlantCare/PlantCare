@@ -21,4 +21,18 @@
         android:layout_height="wrap_content"
         android:layout_margin="10dp"
         android:textSize="30sp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <GridView
+            android:id="@+id/gridView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:numColumns="2"/>
+
+    </ScrollView>
+
+
 </LinearLayout>
