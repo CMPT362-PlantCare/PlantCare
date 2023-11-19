@@ -53,6 +53,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
         tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
+        val defaultImage = ContextCompat.getDrawable(this, R.drawable.flower_icon_green)
+        binding.imageView.setImageDrawable(defaultImage)
 
         initButtons()
 
