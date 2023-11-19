@@ -2,6 +2,7 @@ package com.example.plantcare
 
 import android.Manifest
 import android.app.Activity
+import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -11,6 +12,8 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.widget.DatePicker
+import android.widget.TimePicker
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,10 +24,12 @@ import androidx.core.content.FileProvider
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
 import java.io.File
+import java.util.Calendar
 
-class AddPlantActivity : AppCompatActivity() {
+class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     private lateinit var binding: ActivityAddplantBinding
+    private val calendar = Calendar.getInstance()
     private lateinit var cameraResult: ActivityResultLauncher<Intent>
     private lateinit var galleryResult: ActivityResultLauncher<Intent>
     private lateinit var tempImgFile: File
@@ -39,11 +44,11 @@ class AddPlantActivity : AppCompatActivity() {
         setContentView(binding.root)
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
         tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
+
         initButtons()
 
         val myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
         myViewModel.image.observe(this) {
-            println("changed pic")
             binding.imageView.setImageBitmap(it)
         }
 
@@ -88,7 +93,7 @@ class AddPlantActivity : AppCompatActivity() {
                 }
         }
         binding.dobButton.setOnClickListener(){
-//            add plant to db
+            handleDateInput()
         }
         binding.cancelButton.setOnClickListener(){
             finish()
@@ -121,5 +126,21 @@ class AddPlantActivity : AppCompatActivity() {
         viewModel.image.value = bitmap
         imgToSave = bitmap
         saveImgFlag = true
+    }
+
+    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
+        calendar.set(Calendar.YEAR, p1)
+        calendar.set(Calendar.MONTH, p2)
+        calendar.set(Calendar.DAY_OF_MONTH, p3)
+    }
+
+    private fun handleDateInput() {
+        val datePickerDialog = DatePickerDialog(
+            this, this,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
     }
 }
