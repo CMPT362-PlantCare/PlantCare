@@ -156,7 +156,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.dashboard_toolbar_menu, menu)
+        menuInflater.inflate(R.menu.common_toolbar_menu, menu)
         return true
     }
 
