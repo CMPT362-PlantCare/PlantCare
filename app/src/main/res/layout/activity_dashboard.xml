@@ -31,16 +31,31 @@
             android:textSize="30sp"
             android:gravity="start"
             android:layout_weight="1"/>
-
-        <Button app:backgroundTint="@color/dark_green"
-            android:id="@+id/addButton"
+        <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:drawableLeft="@drawable/flower_icon_white"
-            android:textSize="15sp"
-            android:text="@string/add_button"
-            android:textColor="@color/white"/>
+            android:orientation="vertical">
+
+            <Button app:backgroundTint="@color/dark_green"
+                android:id="@+id/addButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:drawableLeft="@drawable/flower_icon_white"
+                android:textSize="15sp"
+                android:text="@string/add_button"
+                android:textColor="@color/white"/>
+
+            <Button app:backgroundTint="@color/dark_green"
+                android:id="@+id/reminderButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="16dp"
+                android:drawableLeft="@drawable/flower_icon_white"
+                android:textSize="15sp"
+                android:text="@string/reminder_button"
+                android:textColor="@color/white"/>
+        </LinearLayout>
 
     </LinearLayout>
 

@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/plain_bg"
+    android:orientation="vertical"
+    tools:context=".CalenderActivity">
+
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/dark_green"
+        android:elevation="4dp"
+        app:titleTextColor="?android:textColorPrimaryInverse" >
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingLeft="30dp"
+            android:paddingTop="10dp"
+            android:paddingRight="10dp"
+            android:paddingBottom="5dp"
+            android:textSize="20dp"
+            android:text="Care Reminders"
+            android:textColor="@color/white"/>
+    </androidx.appcompat.widget.Toolbar>
+
+    <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+        android:id="@+id/cardV"
+        style="@style/Widget.MaterialComponents.CardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        app:cardElevation="1dp"
+        app:cardMaxElevation="1dp"
+        app:cardUseCompatPadding="true"
+
+        >
+
+        <RelativeLayout
+            android:id="@+id/rellayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:visibility="visible"
+
+            >
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/reminderDetails"
+                style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                android:layout_width="150dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="15dp"
+                android:paddingLeft="15dp"
+                android:text="Today"
+                android:textColor="@color/dark_green"
+                android:textSize="20dp" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/status"
+                style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_alignRight="@+id/reminderDetails"
+                android:layout_marginTop="19dp"
+                android:background="#E3FBEA"
+                android:text="All done"
+                android:textColor="@color/black"
+                android:textSize="16dp" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/arrowBtn"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="180dp"
+                android:layout_marginTop="8dp"
+                android:layout_toRightOf="@+id/status"
+                android:background="@drawable/arrowdown"
+                android:backgroundTint="@color/black" />
+
+
+            <RelativeLayout
+                android:id="@+id/expandableView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/arrowBtn"
+                android:layout_marginTop="10dp"
+                android:paddingBottom="12dp"
+                android:visibility="visible">
+
+                <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+                    android:id="@+id/view"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="10dp"
+                    android:elevation="12dp"
+                    app:cardCornerRadius="25dp">
+
+                    <ImageView
+                        android:id="@+id/circleImage"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="#FFFFFF"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/flower_icon_green" />
+                </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/plantName"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="15dp"
+                    android:paddingLeft="70dp"
+                    android:text="Plant Name"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:paddingLeft="20dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/waterdrop2"
+                    android:layout_below="@+id/plantName">
+
+                </ImageView>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/water"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_below="@+id/plantName"
+                    android:paddingLeft="50dp"
+                    android:text="Water"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/waterplant"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="-20dp"
+                    android:layout_below="@+id/water"
+                    android:paddingLeft="50dp"
+                    android:text="In 4 days/Every 4 days"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/watercan"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginTop="80dp"
+                    android:layout_toRightOf="@+id/waterplant"
+                    android:background="@drawable/wateringcan"
+                     />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+    <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+        android:id="@+id/cardV2"
+        style="@style/Widget.MaterialComponents.CardView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="10dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginEnd="10dp"
+        app:cardElevation="1dp"
+        app:cardMaxElevation="1dp"
+        app:cardUseCompatPadding="true"
+
+        >
+
+        <RelativeLayout
+            android:id="@+id/rellayout2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="10dp"
+            android:visibility="visible"
+
+            >
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/reminderDetails2"
+                style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                android:layout_width="280dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="30dp"
+                android:layout_marginTop="15dp"
+                android:paddingLeft="15dp"
+                android:text="Further (Upcoming)"
+                android:textColor="@color/dark_green"
+                android:textSize="20dp" />
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/status2"
+                style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                android:layout_width="wrap_content"
+                android:layout_height="25dp"
+                android:layout_alignRight="@+id/reminderDetails2"
+                android:layout_marginTop="19dp"
+                android:background="#E3FBEA"
+                android:text="1 task"
+                android:textColor="@color/black"
+                android:textSize="16dp" />
+
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:id="@+id/arrowBtn2"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_marginLeft="50dp"
+                android:layout_marginTop="8dp"
+                android:layout_toRightOf="@+id/status2"
+                android:background="@drawable/arrowdown"
+                android:backgroundTint="@color/black" />
+
+
+            <RelativeLayout
+                android:id="@+id/expandableView2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/arrowBtn2"
+                android:layout_marginTop="10dp"
+                android:paddingBottom="12dp"
+                android:visibility="visible">
+
+                <com.google.android.material.circularreveal.cardview.CircularRevealCardView
+                    android:id="@+id/view2"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:layout_marginStart="10dp"
+                    android:elevation="12dp"
+                    app:cardCornerRadius="25dp">
+
+                    <ImageView
+                        android:id="@+id/circleImage2"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:background="#FFFFFF"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/flower_icon_green" />
+                </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/plantName2"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="15dp"
+                    android:paddingLeft="70dp"
+                    android:text="Plant Name"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <ImageView
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                    android:paddingLeft="20dp"
+                    android:layout_marginTop="5dp"
+                    android:src="@drawable/waterdrop2"
+                    android:layout_below="@+id/plantName2">
+
+                </ImageView>
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/water2"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="15dp"
+                    android:layout_below="@+id/plantName2"
+                    android:paddingLeft="50dp"
+                    android:text="Water"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <com.google.android.material.textview.MaterialTextView
+                    android:id="@+id/waterplant2"
+                    style="@style/MaterialAlertDialog.MaterialComponents.Title.Icon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginTop="-20dp"
+                    android:layout_below="@+id/water2"
+                    android:paddingLeft="50dp"
+                    android:text="In 4 days/Every 4 days"
+                    android:textColor="@color/dark_green"
+                    android:textSize="20dp" />
+
+                <com.google.android.material.button.MaterialButtonToggleGroup
+                    android:id="@+id/watercan2"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="60dp"
+                    android:layout_marginTop="80dp"
+                    android:layout_toRightOf="@+id/waterplant2"
+                    android:background="@drawable/wateringcan"
+                    />
+
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </com.google.android.material.circularreveal.cardview.CircularRevealCardView>
+
+
+
+
+</LinearLayout>
