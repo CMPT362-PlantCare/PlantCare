@@ -20,6 +20,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
+    private lateinit var reminderButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,6 +37,7 @@ class DashboardActivity : AppCompatActivity() {
 
         gridView =  binding.gridView
         addButton = binding.addButton
+        reminderButton = binding.reminderButton
 
         /* SAMPLE ARRAYS */
         val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
@@ -52,6 +54,10 @@ class DashboardActivity : AppCompatActivity() {
 
         addButton.setOnClickListener(){
             /* adding plants */
+        }
+
+        reminderButton.setOnClickListener(){
+            /* reminder page*/
         }
 
     }

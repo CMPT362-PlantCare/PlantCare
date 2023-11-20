@@ -16,5 +16,6 @@
     <!-- DASHBOARD ACTIVITY -->
     <string name="greeting_message">Hello, %s</string>
     <string name="add_button">Add Plant</string>
+    <string name="reminder_button">Reminders</string>
 
 </resources>
