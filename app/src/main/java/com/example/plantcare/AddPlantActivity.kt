@@ -159,18 +159,4 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         menuInflater.inflate(R.menu.common_toolbar_menu, menu)
         return true
     }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_logout -> {
-                firebaseAuth.signOut()
-                val loginActivityIntent = Intent(this, LoginActivity::class.java)
-                startActivity(loginActivityIntent)
-                finish()
-                return true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
 }
