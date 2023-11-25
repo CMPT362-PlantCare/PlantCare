@@ -1,6 +1,9 @@
 package com.example.plantcare
 
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Intent
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
@@ -22,6 +25,8 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var addButton: Button
     private lateinit var reminderButton: Button
 
+    private val DAILY_WATER_REMINDER_HOUR = 16
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
@@ -39,6 +44,8 @@ class DashboardActivity : AppCompatActivity() {
         addButton = binding.addButton
         reminderButton = binding.reminderButton
 
+        /* User's added Plants in gridView*/
+
         /* SAMPLE ARRAYS */
         val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
             R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green)
@@ -52,6 +59,7 @@ class DashboardActivity : AppCompatActivity() {
             Toast.makeText(this, "Click on : ${textSet[position]}", Toast.LENGTH_SHORT).show()
         }
 
+        /* Buttons on page */
         addButton.setOnClickListener(){
             val addPlantActivityIntent =
                 Intent(this, AddPlantActivity::class.java)
@@ -63,6 +71,31 @@ class DashboardActivity : AppCompatActivity() {
                 Intent(this, CalenderActivity::class.java)
             startActivity(reminderActivityIntent)
         }
+
+        /* Daily watering notification*/
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val myIntent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
+
+        val calendar = Calendar.getInstance().apply {
+            if (get(Calendar.HOUR_OF_DAY) >= DAILY_WATER_REMINDER_HOUR) {
+                add(Calendar.DAY_OF_MONTH, 1)
+            }
+
+            set(Calendar.HOUR_OF_DAY, DAILY_WATER_REMINDER_HOUR)
+            set(Calendar.MINUTE, 46)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+        }
+
+
+        alarmManager.setRepeating(
+            AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            AlarmManager.INTERVAL_DAY,
+            pendingIntent
+        )
+
 
     }
 
@@ -84,4 +117,5 @@ class DashboardActivity : AppCompatActivity() {
             else -> super.onOptionsItemSelected(item)
         }
     }
+
 }
