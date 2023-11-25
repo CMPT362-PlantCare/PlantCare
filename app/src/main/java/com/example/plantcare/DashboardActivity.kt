@@ -25,7 +25,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var addButton: Button
     private lateinit var reminderButton: Button
 
-    private val DAILY_WATER_REMINDER_HOUR = 16
+    private val DAILY_WATER_REMINDER_HOUR = 13
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,7 +83,7 @@ class DashboardActivity : AppCompatActivity() {
             }
 
             set(Calendar.HOUR_OF_DAY, DAILY_WATER_REMINDER_HOUR)
-            set(Calendar.MINUTE, 46)
+            set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
         }
