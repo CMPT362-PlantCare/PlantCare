@@ -85,13 +85,13 @@
           app:layout_constraintEnd_toEndOf="parent"
           app:layout_constraintHorizontal_bias="0.5"
           app:layout_constraintStart_toStartOf="parent">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/species_edit_text"
-            style="@style/EditTextInner"
+        <AutoCompleteTextView xmlns:android="http://schemas.android.com/apk/res/android"
+            android:id="@+id/species_autocomplete"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="60dp"
+            android:paddingLeft="15dp"
             android:hint="@string/start_typing_species"
-            android:inputType="text" />
+            style="@style/EditTextInner" />
       </com.google.android.material.textfield.TextInputLayout>
 
       <com.google.android.material.textfield.TextInputLayout

@@ -12,10 +12,12 @@ import android.graphics.Matrix
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
-import android.view.MenuItem
+import android.widget.ArrayAdapter
+import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
-import android.widget.TimePicker
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,8 +30,12 @@ import com.example.plantcare.databinding.ActivityAddplantBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import org.json.JSONObject
 import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
 import java.util.Calendar
+
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -42,6 +48,35 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var tempImgUri: Uri
     private lateinit var imgToSave: Bitmap
     private var saveImgFlag = false
+    private lateinit var myViewModel: MyViewModel
+    private lateinit var query: String
+
+    inner class MyRunnable : Runnable {
+        override fun run() {
+            try {
+                val url = URL("https://perenual.com/api/species-list?key=sk-wS2k653f1f36130b52763&q=$query")
+                with(url.openConnection() as HttpURLConnection) {
+                    requestMethod = "GET"
+                    inputStream.bufferedReader().use {
+                        val speciesList = ArrayList<String>()
+                        it.lines().forEach { line ->
+                            var response = JSONObject(line)
+                            var valueArray = response.getJSONArray("data")
+                            for(t in 0 until valueArray.length()){
+                                var name = valueArray.getJSONObject(t).getString("common_name")
+                                speciesList.add(name)
+                            }
+                        }
+                        runOnUiThread {
+                            this@AddPlantActivity.myViewModel.species.value = speciesList
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,12 +90,20 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
         val defaultImage = ContextCompat.getDrawable(this, R.drawable.flower_icon_green)
         binding.imageView.setImageDrawable(defaultImage)
+        val speciesTextView = findViewById<AutoCompleteTextView>(R.id.species_autocomplete)
+        speciesTextView.threshold = 1
 
         initButtons()
+        requestPermissions()
 
-        val myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
+        myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
         myViewModel.image.observe(this) {
             binding.imageView.setImageBitmap(it)
+        }
+        myViewModel.species.observe(this){
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, it).also { adapter ->
+                speciesTextView.setAdapter(adapter)
+            }
         }
 
         cameraResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
@@ -79,17 +122,38 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
         }
 
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(
-                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE
-            ), 0)
-        }
 
+        speciesTextView.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable) {}
+            override fun beforeTextChanged(
+                s: CharSequence, start: Int,
+                count: Int, after: Int
+            ) {
+            }
+
+            override fun onTextChanged(
+                s: CharSequence, start: Int,
+                before: Int, count: Int
+            ) {
+                query = s.toString()
+                val r: Runnable = MyRunnable()
+                val thread = Thread(r)
+                thread.start()
+            }
+        })
     }
 
+    private fun requestPermissions(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED){
+            ActivityCompat.requestPermissions(this, arrayOf(
+                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET
+            ), 0)
+        }
+    }
     private fun initButtons(){
         binding.photoButton.setOnClickListener(){
             val pictureDialog = PictureDialogFragment()
