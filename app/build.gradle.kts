@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.gms.google-services")
+    id("kotlin-kapt")
 }
 
 android {
@@ -54,4 +55,12 @@ dependencies {
     //circle image
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation ("org.json:json:20231013")
+
+    // Room
+    val roomVersion = "2.6.0"
+    val lifecycleVersion = "2.6.2"
+    implementation("androidx.room:room-ktx:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation ("androidx.lifecycle:lifecycle-livedata-ktx: $lifecycleVersion")
 }

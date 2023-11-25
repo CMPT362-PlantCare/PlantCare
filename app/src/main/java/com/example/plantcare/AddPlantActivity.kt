@@ -51,32 +51,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var myViewModel: MyViewModel
     private lateinit var query: String
 
-    inner class MyRunnable : Runnable {
-        override fun run() {
-            try {
-                val url = URL("https://perenual.com/api/species-list?key=sk-wS2k653f1f36130b52763&q=$query")
-                with(url.openConnection() as HttpURLConnection) {
-                    requestMethod = "GET"
-                    inputStream.bufferedReader().use {
-                        val speciesList = ArrayList<String>()
-                        it.lines().forEach { line ->
-                            var response = JSONObject(line)
-                            var valueArray = response.getJSONArray("data")
-                            for(t in 0 until valueArray.length()){
-                                var name = valueArray.getJSONObject(t).getString("common_name")
-                                speciesList.add(name)
-                            }
-                        }
-                        runOnUiThread {
-                            this@AddPlantActivity.myViewModel.species.value = speciesList
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    private lateinit var plantEntryDatabase: PlantEntryDatabase
+    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
+    private lateinit var plantEntryRepository: PlantEntryRepository
+    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
+    private lateinit var plantEntryViewModel: PlantEntryViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,6 +64,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         binding = ActivityAddplantBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
+
+        setUpPlantEntryDatabase()
 
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
         tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
@@ -143,6 +124,25 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
+        calendar.set(Calendar.YEAR, p1)
+        calendar.set(Calendar.MONTH, p2)
+        calendar.set(Calendar.DAY_OF_MONTH, p3)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.common_toolbar_menu, menu)
+        return true
+    }
+
+    private fun setUpPlantEntryDatabase() {
+        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
+        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
+        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
+        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
+        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
+    }
+
     private fun requestPermissions(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
             || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
@@ -185,6 +185,16 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         cameraResult.launch(intent)
     }
 
+    private fun handleDateInput() {
+        val datePickerDialog = DatePickerDialog(
+            this, this,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
+    }
+
     private fun openGallery() {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.type = "image/*"
@@ -203,24 +213,34 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         saveImgFlag = true
     }
 
-    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
-        calendar.set(Calendar.YEAR, p1)
-        calendar.set(Calendar.MONTH, p2)
-        calendar.set(Calendar.DAY_OF_MONTH, p3)
+
+
+    inner class MyRunnable : Runnable {
+        override fun run() {
+            try {
+                val url = URL("https://perenual.com/api/species-list?key=sk-ACMp656268884beef3126&q=$query")
+                with(url.openConnection() as HttpURLConnection) {
+                    requestMethod = "GET"
+                    inputStream.bufferedReader().use {
+                        val speciesList = ArrayList<String>()
+                        it.lines().forEach { line ->
+                            var response = JSONObject(line)
+                            var valueArray = response.getJSONArray("data")
+                            for(t in 0 until valueArray.length()){
+                                var name = valueArray.getJSONObject(t).getString("common_name")
+                                speciesList.add(name)
+                            }
+                        }
+                        runOnUiThread {
+                            this@AddPlantActivity.myViewModel.species.value = speciesList
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
-    private fun handleDateInput() {
-        val datePickerDialog = DatePickerDialog(
-            this, this,
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePickerDialog.show()
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.common_toolbar_menu, menu)
-        return true
-    }
 }
