@@ -18,6 +18,7 @@ import android.view.Menu
 import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
+import android.widget.RadioButton
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -36,6 +37,10 @@ import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
 
+private const val EMPTY_STRING = ""
+private const val INT_VAL_UNKNOWN = -1
+private const val CHECKED_TP_KEY = "checked_tp_key"
+private const val CHECKED_DH_KEY = "checked_dh_key"
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -64,18 +69,22 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         binding = ActivityAddplantBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
-
         setUpPlantEntryDatabase()
+        requestPermissions()
 
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
-        tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
+        tempImgUri = FileProvider.getUriForFile(this,
+            getString(R.string.com_example_plantcare), tempImgFile)
+
         val defaultImage = ContextCompat.getDrawable(this, R.drawable.flower_icon_green)
         binding.imageView.setImageDrawable(defaultImage)
-        val speciesTextView = findViewById<AutoCompleteTextView>(R.id.species_autocomplete)
-        speciesTextView.threshold = 1
 
         initButtons()
-        requestPermissions()
+        reviveRadioButtonState(savedInstanceState)
+
+        val speciesTextView = binding.speciesAutocomplete
+        speciesTextView.threshold = 1
+
 
         myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
         myViewModel.image.observe(this) {
@@ -124,10 +133,34 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(CHECKED_TP_KEY, binding.terracottaRadioRoup.checkedRadioButtonId)
+        outState.putInt(CHECKED_TP_KEY, binding.drainageRadioGroup.checkedRadioButtonId)
+    }
+
+    private fun reviveRadioButtonState(savedInstanceState: Bundle?) {
+        if (savedInstanceState != null) {
+            val checkedGenderRadioButtonId =
+                savedInstanceState.getInt(CHECKED_TP_KEY, INT_VAL_UNKNOWN)
+                savedInstanceState.getInt(CHECKED_DH_KEY, INT_VAL_UNKNOWN)
+            confirmAndCheckRadioButton(checkedGenderRadioButtonId)
+        }
+    }
+
     override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
         calendar.set(Calendar.YEAR, p1)
         calendar.set(Calendar.MONTH, p2)
         calendar.set(Calendar.DAY_OF_MONTH, p3)
+    }
+
+    private fun confirmAndCheckRadioButton(checkedGenderRadioButtonId: Int) {
+        if (checkedGenderRadioButtonId != INT_VAL_UNKNOWN) {
+            val radioButton = findViewById<RadioButton>(checkedGenderRadioButtonId)
+            if (radioButton != null) {
+                radioButton.isChecked = true
+            }
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
