@@ -46,7 +46,6 @@ dependencies {
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("com.google.android.material:material:1.10.0")
     implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
@@ -54,4 +53,6 @@ dependencies {
     //circle image
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation ("org.json:json:20231013")
+    //firebase
+    implementation("com.google.firebase:firebase-auth:22.3.0")
 }

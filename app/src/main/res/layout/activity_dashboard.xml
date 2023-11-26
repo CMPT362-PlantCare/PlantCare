@@ -47,13 +47,13 @@
                 android:textColor="@color/white"/>
 
             <Button app:backgroundTint="@color/dark_green"
-                android:id="@+id/reminderButton"
+                android:id="@+id/scheduleBtn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:padding="16dp"
                 android:drawableLeft="@drawable/flower_icon_white"
                 android:textSize="15sp"
-                android:text="@string/reminder_button"
+                android:text="@string/schedule_button"
                 android:textColor="@color/white"/>
         </LinearLayout>
 

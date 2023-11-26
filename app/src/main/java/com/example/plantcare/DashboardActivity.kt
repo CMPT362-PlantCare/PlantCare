@@ -20,7 +20,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
-    private lateinit var reminderButton: Button
+    private lateinit var scheduleButton: Button
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,7 +37,7 @@ class DashboardActivity : AppCompatActivity() {
 
         gridView =  binding.gridView
         addButton = binding.addButton
-        reminderButton = binding.reminderButton
+        scheduleButton = binding.scheduleBtn
 
         /* SAMPLE ARRAYS */
         val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
@@ -58,9 +58,9 @@ class DashboardActivity : AppCompatActivity() {
             startActivity(addPlantActivityIntent)
         }
 
-        reminderButton.setOnClickListener(){
+        scheduleButton.setOnClickListener(){
             val reminderActivityIntent =
-                Intent(this, CalenderActivity::class.java)
+                Intent(this, ScheduleActivity::class.java)
             startActivity(reminderActivityIntent)
         }
 
