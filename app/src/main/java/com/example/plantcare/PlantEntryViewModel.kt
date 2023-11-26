@@ -34,6 +34,10 @@ class PlantEntryViewModel(private val repository: PlantEntryRepository) : ViewMo
         }
     }
 
+    fun update(plantEntry: PlantEntry) {
+        repository.update(plantEntry)
+    }
+
     fun deleteAll() {
         val plantEntryList = allPlantEntriesLiveData.value
         if (!plantEntryList.isNullOrEmpty()) {

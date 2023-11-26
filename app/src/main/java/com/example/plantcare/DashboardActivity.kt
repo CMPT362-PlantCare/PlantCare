@@ -14,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
+private const val PLANT_ADD = 0
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
@@ -55,9 +56,9 @@ class DashboardActivity : AppCompatActivity() {
         loadPlantEntryData()
 
         addButton.setOnClickListener(){
-            val addPlantActivityIntent =
-                Intent(this, AddPlantActivity::class.java)
-            startActivity(addPlantActivityIntent)
+            val intent = Intent(this, AddPlantActivity::class.java)
+            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD )
+            startActivity(intent)
         }
 
         reminderButton.setOnClickListener(){
