@@ -8,6 +8,7 @@ import android.widget.Button
 import android.widget.GridView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -17,10 +18,18 @@ class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var gridItemAdapter: GridItemAdapter
+    private lateinit var plantEntryList: ArrayList<PlantEntry>
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
     private lateinit var reminderButton: Button
+
+    private lateinit var plantEntryDatabase: PlantEntryDatabase
+    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
+    private lateinit var plantEntryRepository: PlantEntryRepository
+    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
+    private lateinit var plantEntryViewModel: PlantEntryViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,22 +44,15 @@ class DashboardActivity : AppCompatActivity() {
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
+        setUpPlantEntryDatabase()
+
         gridView =  binding.gridView
         addButton = binding.addButton
         reminderButton = binding.reminderButton
 
-        /* SAMPLE ARRAYS */
-        val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
-            R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green)
-        val textSet = arrayOf("flower #1", "flower #2", "flower #3", "flower #4",
-            "flower #5", "flower #6", "flower #7", "flower #8", "flower #9")
-        /* SAMPLE ARRAYS */
+        setUpGridItemAdapter()
 
-        var gridItemAdapter = GridItemAdapter(this, imageSet, textSet)
-        gridView.adapter = gridItemAdapter
-        gridView.setOnItemClickListener { adapterView, parent, position, l ->
-            Toast.makeText(this, "Click on : ${textSet[position]}", Toast.LENGTH_SHORT).show()
-        }
+        loadPlantEntryData()
 
         addButton.setOnClickListener(){
             val addPlantActivityIntent =
@@ -82,6 +84,28 @@ class DashboardActivity : AppCompatActivity() {
             }
 
             else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun setUpPlantEntryDatabase() {
+        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
+        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
+        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
+        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
+        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
+    }
+
+    private fun setUpGridItemAdapter(){
+        plantEntryList = ArrayList()
+
+        gridItemAdapter = GridItemAdapter(this, plantEntryList)
+        gridView.adapter = gridItemAdapter
+    }
+
+    private fun loadPlantEntryData() {
+        plantEntryViewModel.allPlantEntriesLiveData.observe(this) { updatedList ->
+            gridItemAdapter.replace(updatedList)
+            gridItemAdapter.notifyDataSetChanged()
         }
     }
 }

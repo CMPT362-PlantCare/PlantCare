@@ -15,6 +15,7 @@ import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
 import android.widget.RadioButton
@@ -31,6 +32,9 @@ import com.example.plantcare.databinding.ActivityAddplantBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
@@ -38,7 +42,10 @@ import java.net.URL
 import java.util.Calendar
 
 private const val EMPTY_STRING = ""
+private const val PLANT_ADD = 0
+private const val PLANT_VIEW = 1
 private const val INT_VAL_UNKNOWN = -1
+private const val DEFAULT_POSITION = -1
 private const val CHECKED_TP_KEY = "checked_tp_key"
 private const val CHECKED_DH_KEY = "checked_dh_key"
 
@@ -62,11 +69,16 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
     private lateinit var plantEntryViewModel: PlantEntryViewModel
 
+    private var pageType: Int = PLANT_VIEW
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         firebaseAuth = Firebase.auth
         binding = ActivityAddplantBinding.inflate(layoutInflater)
+
+        val position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        pageType = intent.getIntExtra(getString(R.string.plant_page_type), PLANT_VIEW)
+
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
         setUpPlantEntryDatabase()
@@ -81,6 +93,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         initButtons()
         reviveRadioButtonState(savedInstanceState)
+
+        if(pageType == PLANT_VIEW){
+            getPlantEntryAndPopulateFields(position)
+        }
 
         val speciesTextView = binding.speciesAutocomplete
         speciesTextView.threshold = 1
@@ -100,13 +116,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         { result: ActivityResult ->
             if(result.resultCode == Activity.RESULT_OK){
                 val bitmap = getBitmap(this, tempImgUri)
-                if(bitmap != null) {
-                    binding.imageView
-                    setPicture(myViewModel, bitmap)
-                }
-                else {
-                    Toast.makeText(this, "Error Loading Image", Toast.LENGTH_SHORT).show()
-                }
+                binding.imageView
+                setPicture(myViewModel, bitmap)
             }
         }
 
@@ -114,12 +125,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         {result: ActivityResult ->
             if(result.resultCode == Activity.RESULT_OK && result.data?.data != null) {
                 val bitmap = getBitmap(this, result.data!!.data!!)
-                if(bitmap != null) {
-                    setPicture(myViewModel, bitmap)
-                }
-                else {
-                    Toast.makeText(this, "Error Loading Image", Toast.LENGTH_SHORT).show()
-                }
+                setPicture(myViewModel, bitmap)
             }
         }
 
@@ -144,10 +150,64 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                if(position != DEFAULT_POSITION) {
+                    plantEntryViewModel.delete(position)
+                    finish()
+                    Toast.makeText(this,
+                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT).show()
+                }
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putInt(CHECKED_TP_KEY, binding.terracottaRadioRoup.checkedRadioButtonId)
         outState.putInt(CHECKED_TP_KEY, binding.drainageRadioGroup.checkedRadioButtonId)
+    }
+
+    private fun getPlantEntryAndPopulateFields(position: Int) {
+        plantEntryViewModel.allPlantEntriesLiveData.observe(this) {
+            if (position != null && position != -1) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val plantEntry = plantEntryViewModel.get(position!!)
+                    if (plantEntry != null) {
+                        populateFields(plantEntry)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun populateFields(plantEntry: PlantEntry) {
+        runOnUiThread {
+            val imgUri = Uri.parse(plantEntry.imageUri)
+            binding.imageView.setImageURI(imgUri)
+
+            binding.nameEditText.setText(plantEntry.plantName)
+
+            binding.speciesAutocomplete.setText(plantEntry.plantSpecies)
+
+            binding.sizeEditText.setText(plantEntry.potSize.toString())
+
+            if (plantEntry.drainageHoles) {
+                binding.yesDrainageRadioButton.isChecked = true
+            } else {
+                binding.noDrainageRadioButton.isChecked = true
+            }
+
+            if (plantEntry.terracottaPot) {
+                binding.yesTerracottaRadioButton.isChecked = true
+            } else {
+                binding.noTerracottaRadioButton.isChecked = true
+            }
+        }
     }
 
     private fun reviveRadioButtonState(savedInstanceState: Bundle?) {
@@ -165,9 +225,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         calendar.set(Calendar.DAY_OF_MONTH, p3)
     }
 
-    private fun confirmAndCheckRadioButton(checkedGenderRadioButtonId: Int) {
-        if (checkedGenderRadioButtonId != INT_VAL_UNKNOWN) {
-            val radioButton = findViewById<RadioButton>(checkedGenderRadioButtonId)
+    private fun confirmAndCheckRadioButton(id: Int) {
+        if (id != INT_VAL_UNKNOWN) {
+            val radioButton = findViewById<RadioButton>(id)
             if (radioButton != null) {
                 radioButton.isChecked = true
             }
@@ -175,7 +235,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.common_toolbar_menu, menu)
+        when (pageType) {
+            PLANT_ADD -> menuInflater.inflate(R.menu.common_toolbar_menu, menu)
+            PLANT_VIEW -> menuInflater.inflate(R.menu.delete_toolbar_menu, menu)
+        }
+
         return true
     }
 
@@ -235,14 +299,12 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.potSize = potSize
 
         plantEntry.imageUri = tempImgUri.toString()
-        if(binding.terracottaRadioRoup.checkedRadioButtonId != -1){
-            val isTerracottaPot = binding.terracottaRadioRoup.checkedRadioButtonId == 0
-            plantEntry.terracottaPot = isTerracottaPot
+        if(binding.yesTerracottaRadioButton.isChecked){
+            plantEntry.terracottaPot = true
         }
 
-        if(binding.drainageRadioGroup.checkedRadioButtonId != -1){
-            val drainageHoles = binding.drainageRadioGroup.checkedRadioButtonId == 0
-            plantEntry.terracottaPot = drainageHoles
+        if(binding.yesDrainageRadioButton.isChecked){
+            plantEntry.drainageHoles = true
         }
 
         plantEntryViewModel.insert(plantEntry)
@@ -282,8 +344,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         imgToSave = bitmap
         saveImgFlag = true
     }
-
-
 
     inner class MyRunnable : Runnable {
         override fun run() {

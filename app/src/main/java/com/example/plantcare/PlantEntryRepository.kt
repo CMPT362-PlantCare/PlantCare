@@ -30,6 +30,12 @@ class PlantEntryRepository(private val plantEntryDatabaseDao: PlantEntryDatabase
         }
     }
 
+    fun update(plantEntry: PlantEntry) {
+        CoroutineScope(IO).launch {
+            plantEntryDatabaseDao.updatePlantEntry(plantEntry)
+        }
+    }
+
     fun deleteAll(){
         CoroutineScope(IO).launch {
             plantEntryDatabaseDao.deleteAll()
