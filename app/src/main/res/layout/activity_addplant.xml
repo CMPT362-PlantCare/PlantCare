@@ -8,245 +8,266 @@
     android:orientation="vertical"
     tools:context=".AddPlantActivity">
 
-  <androidx.appcompat.widget.Toolbar
-      android:id="@+id/toolbar"
-      android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:background="@color/dark_green"
-      android:elevation="4dp"
-      app:titleTextColor="?android:textColorPrimaryInverse" />
-
-    <LinearLayout
+    <androidx.appcompat.widget.Toolbar
+        android:id="@+id/toolbar"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:background="@color/dark_green"
+        android:elevation="4dp"
+        app:titleTextColor="?android:textColorPrimaryInverse" />
 
 
-      <LinearLayout
-          android:layout_width="wrap_content"
-          android:layout_height="wrap_content"
-          android:layout_gravity="center_horizontal"
-          android:orientation="horizontal">
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
-        <ImageView
-            android:id="@+id/image_view"
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:layout_marginStart="5dp"
-            android:layout_marginTop="5dp"
-            android:layout_marginEnd="5dp"
-            android:layout_marginBottom="5dp" />
-
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/photo_button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:layout_marginRight="10dp"
-            android:paddingRight="30dp"
-            android:paddingLeft="30dp"
-            android:background="@color/grey"
-            android:text="@string/add_photo"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:layout_toRightOf="@+id/image_view" />
-      </LinearLayout>
-
-      <com.google.android.material.textfield.TextInputLayout
-          android:id="@+id/enter_name_layout"
-          style="@style/EditTextOuter"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginHorizontal="16dp"
-          android:layout_marginTop="24dp"
-          app:boxStrokeColor="@color/dark_green"
-          app:hintTextColor="@color/dark_green"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintHorizontal_bias="0.5"
-          app:layout_constraintStart_toStartOf="parent">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/name_edit_text"
-            style="@style/EditTextInner"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/plant_name"
-            android:inputType="text" />
-      </com.google.android.material.textfield.TextInputLayout>
+            android:orientation="vertical">
 
-      <com.google.android.material.textfield.TextInputLayout
-          android:id="@+id/enter_species_layout"
-          style="@style/EditTextOuter"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginHorizontal="16dp"
-          android:layout_marginTop="2dp"
-          app:boxStrokeColor="@color/dark_green"
-          app:hintTextColor="@color/dark_green"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintHorizontal_bias="0.5"
-          app:layout_constraintStart_toStartOf="parent">
-        <AutoCompleteTextView xmlns:android="http://schemas.android.com/apk/res/android"
-            android:id="@+id/species_autocomplete"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:paddingLeft="15dp"
-            android:hint="@string/start_typing_species"
-            style="@style/EditTextInner" />
-      </com.google.android.material.textfield.TextInputLayout>
-
-      <com.google.android.material.textfield.TextInputLayout
-          android:id="@+id/enter_size_layout"
-          style="@style/EditTextOuter"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_marginHorizontal="16dp"
-          android:layout_marginTop="2dp"
-          app:boxStrokeColor="@color/dark_green"
-          app:hintTextColor="@color/dark_green"
-          app:layout_constraintEnd_toEndOf="parent"
-          app:layout_constraintHorizontal_bias="0.5"
-          app:layout_constraintStart_toStartOf="parent">
-        <com.google.android.material.textfield.TextInputEditText
-            android:id="@+id/size_edit_text"
-            style="@style/EditTextInner"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="@string/pot_size"
-            android:inputType="number" />
-      </com.google.android.material.textfield.TextInputLayout>
-
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="horizontal">
-          <TextView
-              android:id="@+id/terracotta_text_view"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:paddingLeft="10dp"
-              android:paddingTop="10dp"
-              android:paddingRight="10dp"
-              android:paddingBottom="5dp"
-              android:textSize="18dp"
-              android:text="@string/terracotta_pot" />
-          <RadioGroup
-              android:id="@+id/terracotta_radio_roup"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:orientation="horizontal"
-              android:paddingLeft="10dp"
-              android:paddingRight="10dp"
-              android:paddingBottom="5dp">
-            <RadioButton
-                android:id="@+id/yes_terracotta_radio_button"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/yes" />
-            <RadioButton
-                android:id="@+id/no_terracotta_radio_button"
-                android:layout_width="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center_vertical|center_horizontal"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/image_view"
+                    android:layout_width="200dp"
+                    android:layout_height="200dp"
+                    android:layout_margin="10dp"
+                    android:layout_weight="1"/>
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/photo_button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp"
+                    android:layout_weight="2"
+                    android:background="@color/grey"
+                    android:paddingLeft="30dp"
+                    android:paddingRight="30dp"
+                    android:text="@string/add_photo"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/enter_name_layout"
+                style="@style/EditTextOuter"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/no" />
-          </RadioGroup>
-      </LinearLayout>
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="24dp"
+                app:boxStrokeColor="@color/dark_green"
+                app:hintTextColor="@color/dark_green"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent">
 
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="horizontal">
-        <TextView
-            android:id="@+id/drainage_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="10dp"
-            android:paddingTop="10dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="5dp"
-            android:textSize="18dp"
-            android:text="@string/drainage_holes" />
-        <RadioGroup
-            android:id="@+id/drainage_radio_group"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:paddingLeft="10dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="5dp">
-          <RadioButton
-              android:id="@+id/yes_drainage_radio_button"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="@string/yes" />
-          <RadioButton
-              android:id="@+id/no_drainage_radio_button"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:text="@string/no" />
-        </RadioGroup>
-      </LinearLayout>
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/name_edit_text"
+                    style="@style/EditTextInner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/plant_name"
+                    android:inputType="text" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:orientation="horizontal">
-        <TextView
-            android:id="@+id/dob_text_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:paddingLeft="10dp"
-            android:paddingTop="10dp"
-            android:paddingRight="10dp"
-            android:paddingBottom="5dp"
-            android:textSize="18dp"
-            android:text="@string/when_did_you_get_this_plant" />
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/dob_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="10dp"
-            android:layout_marginBottom="2.5dp"
-            android:background="@color/grey"
-            android:text="@string/select_date"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
-      </LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/enter_species_layout"
+                style="@style/EditTextOuter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="2dp"
+                app:boxStrokeColor="@color/dark_green"
+                app:hintTextColor="@color/dark_green"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent">
 
-      <LinearLayout
-          android:layout_width="match_parent"
-          android:layout_height="match_parent"
-          android:orientation="horizontal"
-          android:layout_gravity="bottom"
-          android:weightSum="2" >
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/cancel_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="2.5dp"
-            android:layout_marginBottom="2.5dp"
-            android:layout_weight="1"
-            android:layout_gravity="bottom"
-            android:background="@color/grey"
-            android:text="@string/cancel"
-            android:textColor="@color/white"
-            android:textStyle="bold" />
-        <androidx.appcompat.widget.AppCompatButton
-            android:id="@+id/add_button"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginLeft="2.5dp"
-            android:layout_marginRight="5dp"
-            android:layout_marginBottom="2.5dp"
-            android:layout_weight="1"
-            android:layout_gravity="bottom"
-            android:background="@color/dark_green"
-            android:text="@string/add"
-            android:textColor="@color/white"
-            android:textStyle="bold"
-            android:layout_toRightOf="@+id/cancel_button" />
-      </LinearLayout>
+                <AutoCompleteTextView xmlns:android="http://schemas.android.com/apk/res/android"
+                    android:id="@+id/species_autocomplete"
+                    style="@style/EditTextInner"
+                    android:layout_width="match_parent"
+                    android:layout_height="60dp"
+                    android:hint="@string/start_typing_species"
+                    android:paddingLeft="15dp" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-    </LinearLayout>
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/enter_size_layout"
+                style="@style/EditTextOuter"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="2dp"
+                app:boxStrokeColor="@color/dark_green"
+                app:hintTextColor="@color/dark_green"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/size_edit_text"
+                    style="@style/EditTextInner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/pot_size"
+                    android:inputType="number" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/terracotta_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="5dp"
+                    android:text="@string/terracotta_pot"
+                    android:textSize="18dp" />
+
+                <RadioGroup
+                    android:id="@+id/terracotta_radio_roup"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="5dp">
+
+                    <RadioButton
+                        android:id="@+id/yes_terracotta_radio_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/dark_green"
+                        android:text="@string/yes" />
+
+                    <RadioButton
+                        android:id="@+id/no_terracotta_radio_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/dark_green"
+                        android:text="@string/no" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/drainage_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="5dp"
+                    android:text="@string/drainage_holes"
+                    android:textSize="18dp" />
+
+                <RadioGroup
+                    android:id="@+id/drainage_radio_group"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="5dp">
+
+                    <RadioButton
+                        android:id="@+id/yes_drainage_radio_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/dark_green"
+                        android:text="@string/yes" />
+
+                    <RadioButton
+                        android:id="@+id/no_drainage_radio_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:buttonTint="@color/dark_green"
+                        android:text="@string/no" />
+                </RadioGroup>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/dob_text_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingTop="10dp"
+                    android:paddingRight="10dp"
+                    android:paddingBottom="5dp"
+                    android:text="@string/when_did_you_get_this_plant"
+                    android:textSize="18dp" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/dob_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_marginBottom="2.5dp"
+                    android:background="@color/grey"
+                    android:text="@string/select_date"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="bottom"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp"
+                android:weightSum="2">
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/cancel_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="5dp"
+                    android:layout_marginBottom="2.5dp"
+                    android:layout_weight="1"
+                    android:background="@color/grey"
+                    android:text="@string/cancel"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/add_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="5dp"
+                    android:layout_marginBottom="2.5dp"
+                    android:layout_weight="1"
+                    android:background="@color/dark_green"
+                    android:text="@string/add"
+                    android:textColor="@color/white"
+                    android:textStyle="bold" />
+            </LinearLayout>
+
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>
