@@ -32,6 +32,7 @@
     <string name="add_photo">Add photo</string>
     <string name="drainage_holes">Drainage holes?</string>
     <string name="com_example_plantcare">com.example.plantcare</string>
+    <string name="plant_saved_toast_message">Plant Saved!</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

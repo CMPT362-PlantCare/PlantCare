@@ -16,9 +16,9 @@ import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
 import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
 import android.widget.RadioButton
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -100,7 +100,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         { result: ActivityResult ->
             if(result.resultCode == Activity.RESULT_OK){
                 val bitmap = getBitmap(this, tempImgUri)
-                setPicture(myViewModel, bitmap)
+                if(bitmap != null) {
+                    binding.imageView
+                    setPicture(myViewModel, bitmap)
+                }
+                else {
+                    Toast.makeText(this, "Error Loading Image", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -108,7 +114,12 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         {result: ActivityResult ->
             if(result.resultCode == Activity.RESULT_OK && result.data?.data != null) {
                 val bitmap = getBitmap(this, result.data!!.data!!)
-                setPicture(myViewModel, bitmap)
+                if(bitmap != null) {
+                    setPicture(myViewModel, bitmap)
+                }
+                else {
+                    Toast.makeText(this, "Error Loading Image", Toast.LENGTH_SHORT).show()
+                }
             }
         }
 
@@ -207,9 +218,35 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             finish()
         }
         binding.addButton.setOnClickListener(){
-//            add plant to db
+            savePlantToDatabase()
             finish()
         }
+    }
+    private fun savePlantToDatabase() {
+        val plantEntry = PlantEntry()
+        plantEntry.plantName = binding.nameEditText.text.toString()
+        plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
+
+        var potSize = 0.0
+        val potSizeString = binding.sizeEditText.text.toString()
+        if(potSizeString.isNotEmpty()){
+            potSize = potSizeString.toDouble()
+        }
+        plantEntry.potSize = potSize
+
+        plantEntry.imageUri = tempImgUri.toString()
+        if(binding.terracottaRadioRoup.checkedRadioButtonId != -1){
+            val isTerracottaPot = binding.terracottaRadioRoup.checkedRadioButtonId == 0
+            plantEntry.terracottaPot = isTerracottaPot
+        }
+
+        if(binding.drainageRadioGroup.checkedRadioButtonId != -1){
+            val drainageHoles = binding.drainageRadioGroup.checkedRadioButtonId == 0
+            plantEntry.terracottaPot = drainageHoles
+        }
+
+        plantEntryViewModel.insert(plantEntry)
+        Toast.makeText(this, getString(R.string.plant_saved_toast_message), Toast.LENGTH_SHORT).show()
     }
 
     private fun openCamera() {
