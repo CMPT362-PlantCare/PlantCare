@@ -15,9 +15,11 @@ import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
 import android.widget.DatePicker
+import android.widget.RadioButton
+import android.widget.Toast
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,12 +32,22 @@ import com.example.plantcare.databinding.ActivityAddplantBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
 
+private const val EMPTY_STRING = ""
+private const val PLANT_ADD = 0
+private const val PLANT_VIEW = 1
+private const val INT_VAL_UNKNOWN = -1
+private const val DEFAULT_POSITION = -1
+private const val CHECKED_TP_KEY = "checked_tp_key"
+private const val CHECKED_DH_KEY = "checked_dh_key"
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -51,50 +63,44 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var myViewModel: MyViewModel
     private lateinit var query: String
 
-    inner class MyRunnable : Runnable {
-        override fun run() {
-            try {
-                val url = URL("https://perenual.com/api/species-list?key=sk-wS2k653f1f36130b52763&q=$query")
-                with(url.openConnection() as HttpURLConnection) {
-                    requestMethod = "GET"
-                    inputStream.bufferedReader().use {
-                        val speciesList = ArrayList<String>()
-                        it.lines().forEach { line ->
-                            var response = JSONObject(line)
-                            var valueArray = response.getJSONArray("data")
-                            for(t in 0 until valueArray.length()){
-                                var name = valueArray.getJSONObject(t).getString("common_name")
-                                speciesList.add(name)
-                            }
-                        }
-                        runOnUiThread {
-                            this@AddPlantActivity.myViewModel.species.value = speciesList
-                        }
-                    }
-                }
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    private lateinit var plantEntryDatabase: PlantEntryDatabase
+    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
+    private lateinit var plantEntryRepository: PlantEntryRepository
+    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
+    private lateinit var plantEntryViewModel: PlantEntryViewModel
+
+    private var pageType: Int = PLANT_VIEW
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
         firebaseAuth = Firebase.auth
         binding = ActivityAddplantBinding.inflate(layoutInflater)
+
+        val position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        pageType = intent.getIntExtra(getString(R.string.plant_page_type), PLANT_VIEW)
+
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
+        setUpPlantEntryDatabase()
+        requestPermissions()
 
         tempImgFile = File(getExternalFilesDir(null), "tempImg")
-        tempImgUri = FileProvider.getUriForFile(this, "com.example.plantcare", tempImgFile)
+        tempImgUri = FileProvider.getUriForFile(this,
+            getString(R.string.com_example_plantcare), tempImgFile)
+
         val defaultImage = ContextCompat.getDrawable(this, R.drawable.flower_icon_green)
         binding.imageView.setImageDrawable(defaultImage)
-        val speciesTextView = findViewById<AutoCompleteTextView>(R.id.species_autocomplete)
-        speciesTextView.threshold = 1
 
         initButtons()
-        requestPermissions()
+        reviveRadioButtonState(savedInstanceState)
+
+        if(pageType == PLANT_VIEW){
+            getPlantEntryAndPopulateFields(position)
+        }
+
+        val speciesTextView = binding.speciesAutocomplete
+        speciesTextView.threshold = 1
+
 
         myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
         myViewModel.image.observe(this) {
@@ -110,6 +116,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         { result: ActivityResult ->
             if(result.resultCode == Activity.RESULT_OK){
                 val bitmap = getBitmap(this, tempImgUri)
+                binding.imageView
                 setPicture(myViewModel, bitmap)
             }
         }
@@ -143,6 +150,107 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                if(position != DEFAULT_POSITION) {
+                    plantEntryViewModel.delete(position)
+                    finish()
+                    Toast.makeText(this,
+                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT).show()
+                }
+                return true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(CHECKED_TP_KEY, binding.terracottaRadioRoup.checkedRadioButtonId)
+        outState.putInt(CHECKED_TP_KEY, binding.drainageRadioGroup.checkedRadioButtonId)
+    }
+
+    private fun getPlantEntryAndPopulateFields(position: Int) {
+        plantEntryViewModel.allPlantEntriesLiveData.observe(this) {
+            if (position != null && position != -1) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    val plantEntry = plantEntryViewModel.get(position!!)
+                    if (plantEntry != null) {
+                        populateFields(plantEntry)
+                    }
+                }
+            }
+        }
+    }
+
+    private fun populateFields(plantEntry: PlantEntry) {
+        runOnUiThread {
+            val imgUri = Uri.parse(plantEntry.imageUri)
+            binding.imageView.setImageURI(imgUri)
+
+            binding.nameEditText.setText(plantEntry.plantName)
+
+            binding.speciesAutocomplete.setText(plantEntry.plantSpecies)
+
+            binding.sizeEditText.setText(plantEntry.potSize.toString())
+
+            if (plantEntry.drainageHoles) {
+                binding.yesDrainageRadioButton.isChecked = true
+            } else {
+                binding.noDrainageRadioButton.isChecked = true
+            }
+
+            if (plantEntry.terracottaPot) {
+                binding.yesTerracottaRadioButton.isChecked = true
+            } else {
+                binding.noTerracottaRadioButton.isChecked = true
+            }
+        }
+    }
+
+    private fun reviveRadioButtonState(savedInstanceState: Bundle?) {
+        if (savedInstanceState != null) {
+            val checkedTpRadioButtonId = savedInstanceState.getInt(CHECKED_TP_KEY, INT_VAL_UNKNOWN)
+            confirmAndCheckRadioButton(checkedTpRadioButtonId)
+            val checkedDhRadioButtonId = savedInstanceState.getInt(CHECKED_DH_KEY, INT_VAL_UNKNOWN)
+            confirmAndCheckRadioButton(checkedDhRadioButtonId)
+        }
+    }
+
+    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
+        calendar.set(Calendar.YEAR, p1)
+        calendar.set(Calendar.MONTH, p2)
+        calendar.set(Calendar.DAY_OF_MONTH, p3)
+    }
+
+    private fun confirmAndCheckRadioButton(id: Int) {
+        if (id != INT_VAL_UNKNOWN) {
+            val radioButton = findViewById<RadioButton>(id)
+            if (radioButton != null) {
+                radioButton.isChecked = true
+            }
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        when (pageType) {
+            PLANT_ADD -> menuInflater.inflate(R.menu.common_toolbar_menu, menu)
+            PLANT_VIEW -> menuInflater.inflate(R.menu.delete_toolbar_menu, menu)
+        }
+
+        return true
+    }
+
+    private fun setUpPlantEntryDatabase() {
+        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
+        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
+        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
+        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
+        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
+    }
+
     private fun requestPermissions(){
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
             || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
@@ -174,15 +282,49 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             finish()
         }
         binding.addButton.setOnClickListener(){
-//            add plant to db
+            savePlantToDatabase()
             finish()
         }
+    }
+    private fun savePlantToDatabase() {
+        val plantEntry = PlantEntry()
+        plantEntry.plantName = binding.nameEditText.text.toString()
+        plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
+
+        var potSize = 0.0
+        val potSizeString = binding.sizeEditText.text.toString()
+        if(potSizeString.isNotEmpty()){
+            potSize = potSizeString.toDouble()
+        }
+        plantEntry.potSize = potSize
+
+        plantEntry.imageUri = tempImgUri.toString()
+        if(binding.yesTerracottaRadioButton.isChecked){
+            plantEntry.terracottaPot = true
+        }
+
+        if(binding.yesDrainageRadioButton.isChecked){
+            plantEntry.drainageHoles = true
+        }
+
+        plantEntryViewModel.insert(plantEntry)
+        Toast.makeText(this, getString(R.string.plant_saved_toast_message), Toast.LENGTH_SHORT).show()
     }
 
     private fun openCamera() {
         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
         intent.putExtra(MediaStore.EXTRA_OUTPUT, tempImgUri)
         cameraResult.launch(intent)
+    }
+
+    private fun handleDateInput() {
+        val datePickerDialog = DatePickerDialog(
+            this, this,
+            calendar.get(Calendar.YEAR),
+            calendar.get(Calendar.MONTH),
+            calendar.get(Calendar.DAY_OF_MONTH)
+        )
+        datePickerDialog.show()
     }
 
     private fun openGallery() {
@@ -203,24 +345,32 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         saveImgFlag = true
     }
 
-    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
-        calendar.set(Calendar.YEAR, p1)
-        calendar.set(Calendar.MONTH, p2)
-        calendar.set(Calendar.DAY_OF_MONTH, p3)
+    inner class MyRunnable : Runnable {
+        override fun run() {
+            try {
+                val url = URL("https://perenual.com/api/species-list?key=sk-ACMp656268884beef3126&q=$query")
+                with(url.openConnection() as HttpURLConnection) {
+                    requestMethod = "GET"
+                    inputStream.bufferedReader().use {
+                        val speciesList = ArrayList<String>()
+                        it.lines().forEach { line ->
+                            var response = JSONObject(line)
+                            var valueArray = response.getJSONArray("data")
+                            for(t in 0 until valueArray.length()){
+                                var name = valueArray.getJSONObject(t).getString("common_name")
+                                speciesList.add(name)
+                            }
+                        }
+                        runOnUiThread {
+                            this@AddPlantActivity.myViewModel.species.value = speciesList
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
-    private fun handleDateInput() {
-        val datePickerDialog = DatePickerDialog(
-            this, this,
-            calendar.get(Calendar.YEAR),
-            calendar.get(Calendar.MONTH),
-            calendar.get(Calendar.DAY_OF_MONTH)
-        )
-        datePickerDialog.show()
-    }
 
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.common_toolbar_menu, menu)
-        return true
-    }
 }

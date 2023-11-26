@@ -21,16 +21,7 @@
         tools:targetApi="31">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="sk-wS2k653f1f36130b52763" />
-        <activity
-            android:name=".MonthlyWateringActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MonthlyWaterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".weeklyWateringActivity"
-            android:exported="false" />
+            android:value="sk-ACMp656268884beef3126" />
         <activity
             android:name=".CalenderActivity"
             android:exported="false" />
