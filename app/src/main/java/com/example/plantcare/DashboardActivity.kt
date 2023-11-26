@@ -11,6 +11,7 @@ import android.widget.Button
 import android.widget.GridView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -20,10 +21,18 @@ class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var gridItemAdapter: GridItemAdapter
+    private lateinit var plantEntryList: ArrayList<PlantEntry>
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
     private lateinit var reminderButton: Button
+
+    private lateinit var plantEntryDatabase: PlantEntryDatabase
+    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
+    private lateinit var plantEntryRepository: PlantEntryRepository
+    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
+    private lateinit var plantEntryViewModel: PlantEntryViewModel
 
     private val DAILY_WATER_REMINDER_HOUR = 13
 
@@ -40,24 +49,18 @@ class DashboardActivity : AppCompatActivity() {
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
+        setUpPlantEntryDatabase()
+
         gridView =  binding.gridView
         addButton = binding.addButton
         reminderButton = binding.reminderButton
 
+
         /* User's added Plants in gridView*/
+        setUpGridItemAdapter()
 
-        /* SAMPLE ARRAYS */
-        val imageSet = arrayOf(R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green,
-            R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green, R.drawable.flower_icon_green)
-        val textSet = arrayOf("flower #1", "flower #2", "flower #3", "flower #4",
-            "flower #5", "flower #6", "flower #7", "flower #8", "flower #9")
-        /* SAMPLE ARRAYS */
 
-        var gridItemAdapter = GridItemAdapter(this, imageSet, textSet)
-        gridView.adapter = gridItemAdapter
-        gridView.setOnItemClickListener { adapterView, parent, position, l ->
-            Toast.makeText(this, "Click on : ${textSet[position]}", Toast.LENGTH_SHORT).show()
-        }
+        loadPlantEntryData()
 
         /* Buttons on page */
         addButton.setOnClickListener(){
@@ -73,6 +76,52 @@ class DashboardActivity : AppCompatActivity() {
         }
 
         /* Daily watering notification*/
+        wateringNotification()
+
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu): Boolean {
+        menuInflater.inflate(R.menu.dashboard_toolbar_menu, menu)
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.action_logout -> {
+                firebaseAuth.signOut()
+                val loginActivityIntent = Intent(this, LoginActivity::class.java)
+                startActivity(loginActivityIntent)
+                finish()
+                return true
+            }
+
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    private fun setUpPlantEntryDatabase() {
+        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
+        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
+        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
+        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
+        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
+    }
+
+    private fun setUpGridItemAdapter(){
+        plantEntryList = ArrayList()
+
+        gridItemAdapter = GridItemAdapter(this, plantEntryList)
+        gridView.adapter = gridItemAdapter
+    }
+
+    private fun loadPlantEntryData() {
+        plantEntryViewModel.allPlantEntriesLiveData.observe(this) { updatedList ->
+            gridItemAdapter.replace(updatedList)
+            gridItemAdapter.notifyDataSetChanged()
+        }
+    }
+
+    private fun wateringNotification(){
         val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val myIntent = Intent(this, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
@@ -96,26 +145,5 @@ class DashboardActivity : AppCompatActivity() {
             pendingIntent
         )
 
-
     }
-
-    override fun onCreateOptionsMenu(menu: Menu): Boolean {
-        menuInflater.inflate(R.menu.dashboard_toolbar_menu, menu)
-        return true
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.action_logout -> {
-                firebaseAuth.signOut()
-                val loginActivityIntent = Intent(this, LoginActivity::class.java)
-                startActivity(loginActivityIntent)
-                finish()
-                return true
-            }
-
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
 }

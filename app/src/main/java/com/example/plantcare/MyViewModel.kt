@@ -4,7 +4,11 @@ import android.graphics.Bitmap
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 
-class MyViewModel: ViewModel() {
+class MyViewModel : ViewModel() {
     val image = MutableLiveData<Bitmap>()
+    var species = MutableLiveData<ArrayList<String>>()
 
+    init {
+        species.value = ArrayList()
+    }
 }

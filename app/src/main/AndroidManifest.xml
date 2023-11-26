@@ -20,15 +20,9 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PlantCare"
         tools:targetApi="31">
-        <activity
-            android:name=".MonthlyWateringActivity"
-            android:exported="false" />
-        <activity
-            android:name=".MonthlyWaterActivity"
-            android:exported="false" />
-        <activity
-            android:name=".weeklyWateringActivity"
-            android:exported="false" />
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="sk-ACMp656268884beef3126" />
         <activity
             android:name=".CalenderActivity"
             android:exported="false" />
