@@ -141,10 +141,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun reviveRadioButtonState(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
-            val checkedGenderRadioButtonId =
-                savedInstanceState.getInt(CHECKED_TP_KEY, INT_VAL_UNKNOWN)
-                savedInstanceState.getInt(CHECKED_DH_KEY, INT_VAL_UNKNOWN)
-            confirmAndCheckRadioButton(checkedGenderRadioButtonId)
+            val checkedTpRadioButtonId = savedInstanceState.getInt(CHECKED_TP_KEY, INT_VAL_UNKNOWN)
+            confirmAndCheckRadioButton(checkedTpRadioButtonId)
+            val checkedDhRadioButtonId = savedInstanceState.getInt(CHECKED_DH_KEY, INT_VAL_UNKNOWN)
+            confirmAndCheckRadioButton(checkedDhRadioButtonId)
         }
     }
 
