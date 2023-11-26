@@ -15,6 +15,9 @@ data class PlantEntry(
     @ColumnInfo(name = "plant_species_column")
     var plantSpecies: String = "",
 
+    @ColumnInfo(name = "plant_species_id_column")
+    var plantSpeciesId: String = "",
+
     @ColumnInfo(name = "pot_size_column")
     var potSize: Double = 0.0,
 
