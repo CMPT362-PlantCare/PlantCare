@@ -1,5 +1,6 @@
 package com.example.plantcare
 
+import LogoutDialogFragment
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -48,11 +49,12 @@ class DashboardActivity : AppCompatActivity() {
         firebaseDatabase = Firebase.database
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
 
-        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
+        userEmail =
+            intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
-        gridView =  binding.gridView
+        gridView = binding.gridView
         addButton = binding.addButton
         scheduleButton = binding.scheduleBtn
 
@@ -60,13 +62,14 @@ class DashboardActivity : AppCompatActivity() {
 
         loadPlants()
 
-        addButton.setOnClickListener(){
+        addButton.setOnClickListener() {
             val intent = Intent(this, AddPlantActivity::class.java)
-            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD )
+            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD)
             startActivity(intent)
         }
 
         scheduleButton.setOnClickListener(){
+
             val reminderActivityIntent =
                 Intent(this, ScheduleActivity::class.java)
             startActivity(reminderActivityIntent)
@@ -82,10 +85,9 @@ class DashboardActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                firebaseAuth.signOut()
-                val loginActivityIntent = Intent(this, LoginActivity::class.java)
-                startActivity(loginActivityIntent)
-                finish()
+                val logoutDialogFragment = LogoutDialogFragment()
+                logoutDialogFragment.show(supportFragmentManager,
+                    getString(R.string.logout_dialog_fragment_tag))
                 return true
             }
 
@@ -93,7 +95,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun setUpGridItemAdapter(){
+    private fun setUpGridItemAdapter() {
         plantEntryList = ArrayList()
 
         gridItemAdapter = GridItemAdapter(this, plantEntryList)
@@ -123,5 +125,4 @@ class DashboardActivity : AppCompatActivity() {
             })
         }
     }
-
 }
