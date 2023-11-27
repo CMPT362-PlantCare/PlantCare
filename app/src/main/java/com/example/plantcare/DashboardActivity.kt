@@ -1,7 +1,11 @@
 package com.example.plantcare
 
+
+import android.app.AlarmManager
+import android.app.PendingIntent
 import LogoutDialogFragment
 import android.content.Intent
+import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -58,14 +62,19 @@ class DashboardActivity : AppCompatActivity() {
         addButton = binding.addButton
         scheduleButton = binding.scheduleBtn
 
+
+        /* User's added Plants in gridView*/
         setUpGridItemAdapter()
+
 
         loadPlants()
 
+        /* Buttons on page */
         addButton.setOnClickListener() {
             val intent = Intent(this, AddPlantActivity::class.java)
             intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD)
             startActivity(intent)
+
         }
 
         scheduleButton.setOnClickListener(){
@@ -74,6 +83,9 @@ class DashboardActivity : AppCompatActivity() {
                 Intent(this, ScheduleActivity::class.java)
             startActivity(reminderActivityIntent)
         }
+
+        /* Daily watering notification*/
+        wateringNotification()
 
     }
 
@@ -124,5 +136,24 @@ class DashboardActivity : AppCompatActivity() {
                 }
             })
         }
+    }
+
+    private fun wateringNotification(){
+        val alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val myIntent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
+
+        /* for testing Purpose - Will delete at the end*/
+        /*alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )*/
+        alarmManager.setRepeating(
+            AlarmManager.RTC_WAKEUP,
+            Calendar.getInstance().timeInMillis,
+            AlarmManager.INTERVAL_DAY,
+            pendingIntent
+        )
+
     }
 }
