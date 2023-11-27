@@ -25,6 +25,9 @@
         <meta-data
             android:name="PLANT_API_KEY"
             android:value="${PLANT_API_KEY}"/>
+
+        <activity android:name=".ScheduleActivity"
+            android:exported="false"/>
         <activity
             android:name=".CalenderActivity"
             android:exported="false" />

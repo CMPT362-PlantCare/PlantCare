@@ -51,10 +51,14 @@ dependencies {
     implementation("com.google.firebase:firebase-auth:22.3.0")
     implementation("androidx.fragment:fragment-ktx:1.6.2")
     implementation("com.google.firebase:firebase-database:20.3.0")
+    implementation("com.google.firebase:firebase-database-ktx:20.3.0")
+
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     //circle image
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation ("org.json:json:20231013")
+    // calendarView
+//    implementation("com.kizitonwose.calendar:view:2.4.0")
 }

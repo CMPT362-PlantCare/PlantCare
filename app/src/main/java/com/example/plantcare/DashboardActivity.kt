@@ -37,7 +37,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
-    private lateinit var reminderButton: Button
+    private lateinit var scheduleButton: Button
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
@@ -60,7 +60,7 @@ class DashboardActivity : AppCompatActivity() {
 
         gridView = binding.gridView
         addButton = binding.addButton
-        reminderButton = binding.reminderButton
+        scheduleButton = binding.scheduleBtn
 
 
         /* User's added Plants in gridView*/
@@ -77,9 +77,10 @@ class DashboardActivity : AppCompatActivity() {
 
         }
 
-        reminderButton.setOnClickListener() {
+        scheduleButton.setOnClickListener(){
+
             val reminderActivityIntent =
-                Intent(this, CalenderActivity::class.java)
+                Intent(this, ScheduleActivity::class.java)
             startActivity(reminderActivityIntent)
         }
 
