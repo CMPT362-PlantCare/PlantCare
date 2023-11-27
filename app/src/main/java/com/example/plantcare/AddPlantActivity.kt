@@ -32,7 +32,6 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
-import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
@@ -86,7 +85,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var tempImgFile: File
     private lateinit var tempImgUri: Uri
     private lateinit var imgToSave: Bitmap
-    private lateinit var myViewModel: MyViewModel
+    private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
     private var speciesId = ""
 
@@ -139,7 +138,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
                 val bitmap = getBitmap(this, tempImgUri)
                 binding.imageView
-                setPicture(myViewModel, bitmap)
+                setPicture(addPlantViewModel, bitmap)
             }
         }
 
@@ -151,7 +150,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         copyImage(selectedImageUri, tempImgUri)
 
                         val bitmap = getBitmap(this, tempImgUri)
-                        setPicture(myViewModel, bitmap)
+                        setPicture(addPlantViewModel, bitmap)
                     }
                 }
             }
@@ -210,11 +209,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun setUpViewModel() {
         binding.speciesAutocomplete.threshold = 1
 
-        myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
-        myViewModel.image.observe(this) {
+        addPlantViewModel = ViewModelProvider(this)[AddPlantViewModel::class.java]
+        addPlantViewModel.image.observe(this) {
             binding.imageView.setImageBitmap(it)
         }
-        myViewModel.species.observe(this) {
+        addPlantViewModel.species.observe(this) {
             ArrayAdapter(this, android.R.layout.simple_list_item_1, it).also { adapter ->
                 binding.speciesAutocomplete.setAdapter(adapter)
             }
@@ -251,8 +250,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun setUpSpeciesTextWatcher() {
         binding.speciesAutocomplete.onItemClickListener = OnItemClickListener { parent, arg1, pos, id ->
-            if (myViewModel.id.value != null && pos < myViewModel.id.value!!.size) {
-                speciesId = myViewModel.id.value?.get(pos) ?: ""
+            if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
+                speciesId = addPlantViewModel.id.value?.get(pos) ?: ""
             }
             else {
                 println("invalid autocomplete position")
@@ -562,7 +561,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
-    private fun setPicture(viewModel: MyViewModel, bitmap: Bitmap) {
+    private fun setPicture(viewModel: AddPlantViewModel, bitmap: Bitmap) {
         viewModel.image.value = bitmap
         imgToSave = bitmap
         saveImgFlag = true
@@ -589,8 +588,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             }
                         }
                         runOnUiThread {
-                            this@AddPlantActivity.myViewModel.species.value = speciesList
-                            this@AddPlantActivity.myViewModel.id.value = idList
+                            this@AddPlantActivity.addPlantViewModel.species.value = speciesList
+                            this@AddPlantActivity.addPlantViewModel.id.value = idList
                         }
                     }
                 }
