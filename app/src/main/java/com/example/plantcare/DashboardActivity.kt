@@ -8,7 +8,6 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.GridView
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -50,11 +49,12 @@ class DashboardActivity : AppCompatActivity() {
         firebaseDatabase = Firebase.database
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
 
-        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
+        userEmail =
+            intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
-        gridView =  binding.gridView
+        gridView = binding.gridView
         addButton = binding.addButton
         reminderButton = binding.reminderButton
 
@@ -62,13 +62,13 @@ class DashboardActivity : AppCompatActivity() {
 
         loadPlants()
 
-        addButton.setOnClickListener(){
+        addButton.setOnClickListener() {
             val intent = Intent(this, AddPlantActivity::class.java)
-            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD )
+            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD)
             startActivity(intent)
         }
 
-        reminderButton.setOnClickListener(){
+        reminderButton.setOnClickListener() {
             val reminderActivityIntent =
                 Intent(this, CalenderActivity::class.java)
             startActivity(reminderActivityIntent)
@@ -85,7 +85,8 @@ class DashboardActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_logout -> {
                 val logoutDialogFragment = LogoutDialogFragment()
-                logoutDialogFragment.show(supportFragmentManager, "LogoutDialogFragment")
+                logoutDialogFragment.show(supportFragmentManager,
+                    getString(R.string.logout_dialog_fragment_tag))
                 return true
             }
 
@@ -93,7 +94,7 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun setUpGridItemAdapter(){
+    private fun setUpGridItemAdapter() {
         plantEntryList = ArrayList()
 
         gridItemAdapter = GridItemAdapter(this, plantEntryList)
@@ -123,24 +124,4 @@ class DashboardActivity : AppCompatActivity() {
             })
         }
     }
-
-//    private fun showLogoutConfirmationDialog() {
-//        val alertDialogBuilder = AlertDialog.Builder(this)
-//        alertDialogBuilder.setTitle(getString(R.string.logout_confirmation_title))
-//        alertDialogBuilder.setMessage(getString(R.string.logout_confirmation_message))
-//
-//        alertDialogBuilder.setPositiveButton(getString(R.string.yes)) { _, _ ->
-//            firebaseAuth.signOut()
-//            val loginActivityIntent = Intent(this, LoginActivity::class.java)
-//            startActivity(loginActivityIntent)
-//            finish()
-//        }
-//
-//        alertDialogBuilder.setNegativeButton(getString(R.string.no)) { dialog, _ ->
-//            dialog.dismiss()
-//        }
-//
-//        val alertDialog = alertDialogBuilder.create()
-//        alertDialog.show()
-//    }
 }
