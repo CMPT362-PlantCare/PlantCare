@@ -36,5 +36,23 @@
         android:layout_height="wrap_content"
         android:layout_margin="15dp"/>
 
+    <TextView
+        android:id="@+id/eventListTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/event_list_title"
+        android:layout_marginHorizontal="15dp"
+        android:textSize="20sp"
+        />
+
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:id="@+id/eventList"
+            android:divider="@null"
+            android:dividerHeight="0dp"
+            android:scrollbars="none"
+            android:layout_margin="15dp"/>
+
 
 </LinearLayout>

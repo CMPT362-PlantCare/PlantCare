@@ -37,6 +37,7 @@
     <string name="plant_deleted_toast_message">Plant Deleted.</string>
     <string name="position_key">position_key</string>
     <string name="plant_page_type">plant_page_type</string>
+    <string name="event_list_title">Watering</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

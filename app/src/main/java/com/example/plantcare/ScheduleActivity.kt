@@ -3,6 +3,7 @@ package com.example.plantcare
 import android.content.Intent
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityScheduleBinding
@@ -11,6 +12,7 @@ class ScheduleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityScheduleBinding
     private lateinit var date : String
     private lateinit var calendar : Calendar
+    private lateinit var eventListAdapter: ArrayAdapter<WateringEventEntry>
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityScheduleBinding.inflate(layoutInflater)
@@ -19,6 +21,9 @@ class ScheduleActivity : AppCompatActivity() {
 
         calendar = Calendar.getInstance()
         getInitialDate()
+
+        eventListAdapter = ArrayAdapter(this, R.layout.watering_event, mutableListOf())
+        binding.eventList.adapter = eventListAdapter
 
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             date = (month+1).toString() + "/" + dayOfMonth.toString() + "/" + year.toString()
