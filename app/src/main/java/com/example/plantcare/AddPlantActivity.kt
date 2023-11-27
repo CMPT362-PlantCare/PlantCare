@@ -38,9 +38,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.io.File
+import java.io.FileInputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.util.Calendar
+import java.util.Properties
 
 
 private const val EMPTY_STRING = ""
@@ -316,6 +318,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if(binding.yesDrainageRadioButton.isChecked){
             plantEntry.drainageHoles = true
         }
+        plantEntry.adoptionDate = calendar.timeInMillis
+
 
         plantEntryViewModel.insert(plantEntry)
         Toast.makeText(this, getString(R.string.plant_saved_toast_message), Toast.LENGTH_SHORT).show()
@@ -358,7 +362,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val url = URL("https://perenual.com/api/species-list?key=sk-ACMp656268884beef3126&q=$query")
+                val apiKey =  BuildConfig.PLANT_API_KEY
+                val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
                 with(url.openConnection() as HttpURLConnection) {
                     requestMethod = "GET"
                     inputStream.bufferedReader().use {
