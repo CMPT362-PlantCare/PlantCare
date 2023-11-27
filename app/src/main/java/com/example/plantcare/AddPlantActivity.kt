@@ -14,8 +14,10 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
 import android.widget.RadioButton
@@ -27,19 +29,34 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
+import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+
 
 private const val EMPTY_STRING = ""
 private const val PLANT_ADD = 0
@@ -48,6 +65,12 @@ private const val INT_VAL_UNKNOWN = -1
 private const val DEFAULT_POSITION = -1
 private const val CHECKED_TP_KEY = "checked_tp_key"
 private const val CHECKED_DH_KEY = "checked_dh_key"
+private const val NAME_KEY = "name_key"
+private const val SPECIES_KEY = "species_key"
+private const val POT_SIZE_KEY = "pot_size_key"
+private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
+private const val IMAGE_NAME_SET = "image_name_set_key"
+private const val TEMP_IMG_URI = "temp_img_uri_key"
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -59,62 +82,57 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var tempImgFile: File
     private lateinit var tempImgUri: Uri
     private lateinit var imgToSave: Bitmap
-    private var saveImgFlag = false
     private lateinit var myViewModel: MyViewModel
     private lateinit var query: String
+    private var speciesId = ""
 
-    private lateinit var plantEntryDatabase: PlantEntryDatabase
-    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
-    private lateinit var plantEntryRepository: PlantEntryRepository
-    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
-    private lateinit var plantEntryViewModel: PlantEntryViewModel
+    private lateinit var firebaseDatabase: FirebaseDatabase
+    private lateinit var userRef: DatabaseReference
 
+    private var position: Int = DEFAULT_POSITION
     private var pageType: Int = PLANT_VIEW
+    private var isRenderedPlantEntry: Boolean = false
+    private var saveImgFlag: Boolean = false
+    private var isImageNameSet: Boolean = false
+    private var imageName: String = EMPTY_STRING
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
         firebaseAuth = Firebase.auth
+        firebaseDatabase = Firebase.database
+        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
+
         binding = ActivityAddplantBinding.inflate(layoutInflater)
 
-        val position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
         pageType = intent.getIntExtra(getString(R.string.plant_page_type), PLANT_VIEW)
 
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
-        setUpPlantEntryDatabase()
         requestPermissions()
-
-        tempImgFile = File(getExternalFilesDir(null), "tempImg")
-        tempImgUri = FileProvider.getUriForFile(this,
-            getString(R.string.com_example_plantcare), tempImgFile)
-
-        val defaultImage = ContextCompat.getDrawable(this, R.drawable.flower_icon_green)
-        binding.imageView.setImageDrawable(defaultImage)
-
         initButtons()
-        reviveRadioButtonState(savedInstanceState)
+        reviveUserInputs(savedInstanceState)
 
-        if(pageType == PLANT_VIEW){
-            getPlantEntryAndPopulateFields(position)
-        }
-
-        val speciesTextView = binding.speciesAutocomplete
-        speciesTextView.threshold = 1
-
-
-        myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
-        myViewModel.image.observe(this) {
-            binding.imageView.setImageBitmap(it)
-        }
-        myViewModel.species.observe(this){
-            ArrayAdapter(this, android.R.layout.simple_list_item_1, it).also { adapter ->
-                speciesTextView.setAdapter(adapter)
+        when (pageType) {
+            PLANT_VIEW -> {
+                if (!isRenderedPlantEntry) {
+                    getPlantEntryAndPopulateFields()
+                    isRenderedPlantEntry = true
+                } else {
+                    binding.imageView.setImageURI(tempImgUri)
+                }
             }
+
+            PLANT_ADD -> setUpTempImage()
         }
+
+        setUpViewModel()
 
         cameraResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         { result: ActivityResult ->
-            if(result.resultCode == Activity.RESULT_OK){
+            if (result.resultCode == Activity.RESULT_OK) {
+
                 val bitmap = getBitmap(this, tempImgUri)
                 binding.imageView
                 setPicture(myViewModel, bitmap)
@@ -122,16 +140,92 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
 
         galleryResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-        {result: ActivityResult ->
-            if(result.resultCode == Activity.RESULT_OK && result.data?.data != null) {
+        { result: ActivityResult ->
+            if (result.resultCode == Activity.RESULT_OK && result.data?.data != null) {
                 val bitmap = getBitmap(this, result.data!!.data!!)
                 setPicture(myViewModel, bitmap)
             }
         }
 
+        setUpSpeciesTextWatcher()
+    }
 
-        speciesTextView.addTextChangedListener(object : TextWatcher {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
+        return when (item.itemId) {
+            R.id.action_delete -> {
+                if (position != DEFAULT_POSITION) {
+                    CoroutineScope(Dispatchers.IO).launch {
+                        userRef.child("plants").addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (position >= 0 && position < snapshot.childrenCount) {
+                                    val plantSnapshot = snapshot.children.toList()[position]
+                                    val plantId = plantSnapshot.key
+
+                                    if (plantId != null) {
+                                        userRef.child("plants").child(plantId).removeValue()
+                                        finish()
+                                    }
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.w("TAG", "Failed to read value.", error.toException())
+                            }
+                        })
+                    }
+
+                    Toast.makeText(
+                        this,
+                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
+                    ).show()
+                }
+                return true
+            }
+
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putInt(CHECKED_TP_KEY, binding.terracottaRadioRoup.checkedRadioButtonId)
+        outState.putInt(CHECKED_DH_KEY, binding.drainageRadioGroup.checkedRadioButtonId)
+        outState.putString(NAME_KEY, binding.nameEditText.text.toString())
+        outState.putString(SPECIES_KEY, binding.speciesAutocomplete.text.toString())
+        outState.putString(POT_SIZE_KEY, binding.sizeEditText.text.toString())
+        outState.putBoolean(RENDERED_PLANT_ENTRY, isRenderedPlantEntry)
+        outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
+        outState.putString(TEMP_IMG_URI, tempImgUri.toString())
+    }
+
+    private fun setUpViewModel() {
+        binding.speciesAutocomplete.threshold = 1
+
+        myViewModel = ViewModelProvider(this)[MyViewModel::class.java]
+        myViewModel.image.observe(this) {
+            binding.imageView.setImageBitmap(it)
+        }
+        myViewModel.species.observe(this) {
+            ArrayAdapter(this, android.R.layout.simple_list_item_1, it).also { adapter ->
+                binding.speciesAutocomplete.setAdapter(adapter)
+            }
+        }
+    }
+
+    private fun setUpSpeciesTextWatcher() {
+        binding.speciesAutocomplete.onItemClickListener = OnItemClickListener { parent, arg1, pos, id ->
+            if (myViewModel.id.value != null && pos < myViewModel.id.value!!.size) {
+                speciesId = myViewModel.id.value?.get(pos) ?: ""
+            }
+            else {
+                println("invalid autocomplete position")
+            }
+        }
+
+        binding.speciesAutocomplete.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {}
+
             override fun beforeTextChanged(
                 s: CharSequence, start: Int,
                 count: Int, after: Int
@@ -150,45 +244,79 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
-        return when (item.itemId) {
-            R.id.action_delete -> {
-                if(position != DEFAULT_POSITION) {
-                    plantEntryViewModel.delete(position)
-                    finish()
-                    Toast.makeText(this,
-                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT).show()
-                }
-                return true
+    private fun setUpTempImage() {
+        // Load the default image drawable
+        val defaultImageDrawable = ContextCompat.getDrawable(this, R.drawable.default_plant_profile_pic)
+
+        // Set the default image to the ImageView
+        binding.imageView.setImageDrawable(defaultImageDrawable)
+
+        if (!isImageNameSet) {
+            imageName = generateImageName()
+            isImageNameSet = true
+        }
+
+        // Get the external files directory
+        val externalFilesDir = getExternalFilesDir(null)
+
+        if (externalFilesDir != null) {
+            // Create a File for the temp image
+            tempImgFile = File(externalFilesDir, imageName)
+
+            // Convert the default image drawable to a Bitmap
+            val bitmap = defaultImageDrawable?.toBitmap()
+
+            // Save the Bitmap to the tempImgFile
+            try {
+                val stream = FileOutputStream(tempImgFile)
+                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                stream.flush()
+                stream.close()
+            } catch (e: IOException) {
+                e.printStackTrace()
             }
-            else -> super.onOptionsItemSelected(item)
+
+            tempImgUri = FileProvider.getUriForFile(
+                this,
+                getString(R.string.com_example_plantcare),
+                tempImgFile
+            )
+        } else {
+            Toast.makeText(this,
+                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT).show()
         }
     }
 
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putInt(CHECKED_TP_KEY, binding.terracottaRadioRoup.checkedRadioButtonId)
-        outState.putInt(CHECKED_TP_KEY, binding.drainageRadioGroup.checkedRadioButtonId)
-    }
-
-    private fun getPlantEntryAndPopulateFields(position: Int) {
-        plantEntryViewModel.allPlantEntriesLiveData.observe(this) {
-            if (position != null && position != -1) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val plantEntry = plantEntryViewModel.get(position!!)
-                    if (plantEntry != null) {
-                        populateFields(plantEntry)
+    private fun getPlantEntryAndPopulateFields() {
+        CoroutineScope(Dispatchers.IO).launch {
+            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (position != -1 && position > 0 && position < snapshot.children.toList().size) {
+                        val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
+                        if(plantEntry != null){
+                            populateFields(plantEntry)
+                        }
                     }
                 }
-            }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w("TAG", "Failed to read value.", error.toException())
+                }
+            })
         }
     }
 
-    private fun populateFields(plantEntry: PlantEntry) {
+    private fun generateImageName(): String {
+        val dateFormat = SimpleDateFormat(getString(R.string.img_date_format), Locale.getDefault())
+        val currentTimeStamp = dateFormat.format(Date())
+        return getString(R.string.img_name_format, currentTimeStamp)
+    }
+
+    private fun populateFields(plantEntry: Plant) {
         runOnUiThread {
-            val imgUri = Uri.parse(plantEntry.imageUri)
-            binding.imageView.setImageURI(imgUri)
+            tempImgUri = Uri.parse(plantEntry.imageUri)
+
+            binding.imageView.setImageURI(tempImgUri)
 
             binding.nameEditText.setText(plantEntry.plantName)
 
@@ -196,26 +324,43 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
             binding.sizeEditText.setText(plantEntry.potSize.toString())
 
-            if (plantEntry.drainageHoles) {
-                binding.yesDrainageRadioButton.isChecked = true
-            } else {
-                binding.noDrainageRadioButton.isChecked = true
+            if (plantEntry.drainageHoles != null) {
+                if(plantEntry.drainageHoles == true){
+                    binding.yesDrainageRadioButton.isChecked = true
+                } else {
+                    binding.noDrainageRadioButton.isChecked = true
+                }
             }
 
-            if (plantEntry.terracottaPot) {
-                binding.yesTerracottaRadioButton.isChecked = true
-            } else {
-                binding.noTerracottaRadioButton.isChecked = true
+            if(plantEntry.terracottaPot != null){
+                if (plantEntry.terracottaPot == true) {
+                    binding.yesTerracottaRadioButton.isChecked = true
+                } else {
+                    binding.noTerracottaRadioButton.isChecked = true
+                }
             }
         }
     }
 
-    private fun reviveRadioButtonState(savedInstanceState: Bundle?) {
+    private fun reviveUserInputs(savedInstanceState: Bundle?) {
         if (savedInstanceState != null) {
             val checkedTpRadioButtonId = savedInstanceState.getInt(CHECKED_TP_KEY, INT_VAL_UNKNOWN)
             confirmAndCheckRadioButton(checkedTpRadioButtonId)
+
             val checkedDhRadioButtonId = savedInstanceState.getInt(CHECKED_DH_KEY, INT_VAL_UNKNOWN)
             confirmAndCheckRadioButton(checkedDhRadioButtonId)
+
+            val name = savedInstanceState.getString(NAME_KEY, EMPTY_STRING)
+            val species = savedInstanceState.getString(SPECIES_KEY, EMPTY_STRING)
+            val potSize = savedInstanceState.getString(POT_SIZE_KEY, EMPTY_STRING)
+
+            binding.nameEditText.setText(name)
+            binding.speciesAutocomplete.setText(species)
+            binding.sizeEditText.setText(potSize)
+
+            isRenderedPlantEntry = savedInstanceState.getBoolean(RENDERED_PLANT_ENTRY, false)
+            isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
+            tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
         }
     }
 
@@ -243,27 +388,35 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         return true
     }
 
-    private fun setUpPlantEntryDatabase() {
-        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
-        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
-        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
-        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
-        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
-    }
-
-    private fun requestPermissions(){
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(this, Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED
-            || ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED){
-            ActivityCompat.requestPermissions(this, arrayOf(
-                Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET
-            ), 0)
+    private fun requestPermissions() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.READ_MEDIA_IMAGES
+            ) != PackageManager.PERMISSION_GRANTED
+            || ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.INTERNET
+            ) != PackageManager.PERMISSION_GRANTED
+        ) {
+            ActivityCompat.requestPermissions(
+                this, arrayOf(
+                    Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET
+                ), 0
+            )
         }
     }
-    private fun initButtons(){
-        binding.photoButton.setOnClickListener(){
+
+    private fun initButtons() {
+        binding.photoButton.setOnClickListener {
             val pictureDialog = PictureDialogFragment()
             pictureDialog.show(supportFragmentManager, "tag")
 
@@ -275,40 +428,76 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     }
                 }
         }
-        binding.dobButton.setOnClickListener(){
+        binding.dobButton.setOnClickListener {
             handleDateInput()
         }
-        binding.cancelButton.setOnClickListener(){
+        binding.cancelButton.setOnClickListener {
             finish()
         }
-        binding.addButton.setOnClickListener(){
-            savePlantToDatabase()
-            finish()
+
+        if (pageType == PLANT_VIEW) {
+            binding.addButton.text = getString(R.string.update)
+            binding.addButton.setOnClickListener {
+                updatePlant()
+            }
+        } else {
+            binding.addButton.text = getString(R.string.add)
+            binding.addButton.setOnClickListener {
+                savePlantToDatabase()
+            }
         }
     }
+
+    private fun updatePlant() {
+        CoroutineScope(Dispatchers.IO).launch {
+            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (position != -1 && position >=0 && position < snapshot.children.toList().size) {
+                        val plantSnapshot =  snapshot.children.toList()[position]
+                        val plantId = plantSnapshot.key
+                        val plantEntry =  plantSnapshot.getValue(Plant::class.java)
+                        if(plantEntry != null){
+                            setPlantEntryAttributes(plantEntry)
+                        }
+                        if (plantId != null) {
+                            userRef.child("plants").child(plantId).setValue(plantEntry)
+                            finish()
+                        }
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w("TAG", "Failed to read value.", error.toException())
+                }
+            })
+        }
+    }
+
     private fun savePlantToDatabase() {
-        val plantEntry = PlantEntry()
+        val plantEntry = Plant()
+        setPlantEntryAttributes(plantEntry)
+        val plantId = userRef.child("plants").push().key
+        if (plantId != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                userRef.child("plants").child(plantId).setValue(plantEntry).await()
+                finish()
+            }
+        }
+    }
+
+    private fun setPlantEntryAttributes(plantEntry: Plant) {
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
-
+        plantEntry.plantSpeciesId = speciesId
         var potSize = 0.0
         val potSizeString = binding.sizeEditText.text.toString()
-        if(potSizeString.isNotEmpty()){
+        if (potSizeString.isNotEmpty()) {
             potSize = potSizeString.toDouble()
         }
         plantEntry.potSize = potSize
-
         plantEntry.imageUri = tempImgUri.toString()
-        if(binding.yesTerracottaRadioButton.isChecked){
-            plantEntry.terracottaPot = true
-        }
-
-        if(binding.yesDrainageRadioButton.isChecked){
-            plantEntry.drainageHoles = true
-        }
-
-        plantEntryViewModel.insert(plantEntry)
-        Toast.makeText(this, getString(R.string.plant_saved_toast_message), Toast.LENGTH_SHORT).show()
+        plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
+        plantEntry.drainageHoles = binding.yesDrainageRadioButton.isChecked
     }
 
     private fun openCamera() {
@@ -353,16 +542,20 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     requestMethod = "GET"
                     inputStream.bufferedReader().use {
                         val speciesList = ArrayList<String>()
+                        val idList = ArrayList<String>()
                         it.lines().forEach { line ->
                             var response = JSONObject(line)
                             var valueArray = response.getJSONArray("data")
-                            for(t in 0 until valueArray.length()){
+                            for (t in 0 until valueArray.length()) {
                                 var name = valueArray.getJSONObject(t).getString("common_name")
                                 speciesList.add(name)
+                                var id = valueArray.getJSONObject(t).getString("id")
+                                idList.add(id)
                             }
                         }
                         runOnUiThread {
                             this@AddPlantActivity.myViewModel.species.value = speciesList
+                            this@AddPlantActivity.myViewModel.id.value = idList
                         }
                     }
                 }
@@ -371,6 +564,4 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
         }
     }
-
-
 }

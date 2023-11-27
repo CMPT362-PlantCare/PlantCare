@@ -9,11 +9,11 @@
 
     <ImageView
         android:id="@+id/ivPlantPicSchedule"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="115dp"
+        android:layout_height="109dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:src="@tools:sample/avatars"
+        android:src="@drawable/default_plant_profile_pic"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,10 +25,13 @@
         android:layout_marginEnd="40dp"
         android:fontFamily="casual"
         android:text="Plant Name"
+        android:letterSpacing="0.07"
         app:layout_constraintBottom_toBottomOf="@+id/ivPlantPicSchedule"
         app:layout_constraintEnd_toStartOf="@+id/btnWateringSchedule"
+        app:layout_constraintHorizontal_bias="0.125"
         app:layout_constraintStart_toEndOf="@+id/ivPlantPicSchedule"
-        app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule" />
+        app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule"
+        app:layout_constraintVertical_bias="0.505" />
 
     <Button
         android:id="@+id/btnWateringSchedule"
