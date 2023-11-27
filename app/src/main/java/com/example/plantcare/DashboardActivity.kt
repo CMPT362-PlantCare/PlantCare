@@ -42,8 +42,6 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
 
-    private val DAILY_WATER_REMINDER_HOUR = 13
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDashboardBinding.inflate(layoutInflater)
@@ -144,17 +142,6 @@ class DashboardActivity : AppCompatActivity() {
         val myIntent = Intent(this, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
 
-        val calendar = Calendar.getInstance().apply {
-           if (get(Calendar.HOUR_OF_DAY) >= DAILY_WATER_REMINDER_HOUR) {
-                add(Calendar.DAY_OF_MONTH, 1)
-            }
-
-            set(Calendar.HOUR_OF_DAY, DAILY_WATER_REMINDER_HOUR)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-
         /* for testing Purpose - Will delete at the end*/
         /*alarmManager.setExact(AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
@@ -162,7 +149,7 @@ class DashboardActivity : AppCompatActivity() {
         )*/
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
+            Calendar.getInstance().timeInMillis,
             AlarmManager.INTERVAL_DAY,
             pendingIntent
         )
