@@ -23,7 +23,7 @@ class ScheduleActivity : AppCompatActivity() {
         getInitialDate()
 
         eventListAdapter = ArrayAdapter(this, R.layout.watering_event, mutableListOf())
-        binding.eventList.adapter = eventListAdapter
+//        binding.eventList.adapter = eventListAdapter
 
         binding.calendarView.setOnDateChangeListener { _, year, month, dayOfMonth ->
             date = (month+1).toString() + "/" + dayOfMonth.toString() + "/" + year.toString()
