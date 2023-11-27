@@ -1,5 +1,6 @@
 package com.example.plantcare
 
+import LogoutDialogFragment
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
@@ -7,6 +8,7 @@ import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.GridView
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -82,10 +84,8 @@ class DashboardActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                firebaseAuth.signOut()
-                val loginActivityIntent = Intent(this, LoginActivity::class.java)
-                startActivity(loginActivityIntent)
-                finish()
+                val logoutDialogFragment = LogoutDialogFragment()
+                logoutDialogFragment.show(supportFragmentManager, "LogoutDialogFragment")
                 return true
             }
 
@@ -124,4 +124,23 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
+//    private fun showLogoutConfirmationDialog() {
+//        val alertDialogBuilder = AlertDialog.Builder(this)
+//        alertDialogBuilder.setTitle(getString(R.string.logout_confirmation_title))
+//        alertDialogBuilder.setMessage(getString(R.string.logout_confirmation_message))
+//
+//        alertDialogBuilder.setPositiveButton(getString(R.string.yes)) { _, _ ->
+//            firebaseAuth.signOut()
+//            val loginActivityIntent = Intent(this, LoginActivity::class.java)
+//            startActivity(loginActivityIntent)
+//            finish()
+//        }
+//
+//        alertDialogBuilder.setNegativeButton(getString(R.string.no)) { dialog, _ ->
+//            dialog.dismiss()
+//        }
+//
+//        val alertDialog = alertDialogBuilder.create()
+//        alertDialog.show()
+//    }
 }
