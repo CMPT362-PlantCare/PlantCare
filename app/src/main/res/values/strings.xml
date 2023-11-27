@@ -16,6 +16,8 @@
     <!-- DASHBOARD ACTIVITY -->
     <string name="greeting_message">Hello, %s</string>
     <string name="add_button">Add Plant</string>
+    <string name="logout_confirmation_title">Logout</string>
+    <string name="logout_confirmation_message">Are you sure you want to log out?</string>
     <string name="reminder_button">Reminders</string>
 
     <!-- ADD PLANT ACTIVITY -->
@@ -34,8 +36,14 @@
     <string name="com_example_plantcare">com.example.plantcare</string>
     <string name="plant_saved_toast_message">Plant Saved!</string>
     <string name="plant_deleted_toast_message">Plant Deleted.</string>
+    <string name="file_permission_error_message">Oops! Looks Like Something Went Wrong. Please Allow File Access Permissions.</string>
     <string name="position_key">position_key</string>
     <string name="plant_page_type">plant_page_type</string>
+    <string name="update">Update</string>
+    <string name="oops_missing_external_file_directory">Oops! Missing External File Directory</string>
+    <string name="img_date_format">yyyyMMdd_HHmmss</string>
+    <string name="img_name_format">image_%1$s</string>
+    <string name="logout_dialog_fragment_tag">LogoutDialogFragment</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

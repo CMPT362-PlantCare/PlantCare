@@ -1,38 +1,46 @@
 package com.example.plantcare
 
+
 import android.app.AlarmManager
 import android.app.PendingIntent
+import LogoutDialogFragment
 import android.content.Intent
 import android.icu.util.Calendar
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.GridView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
+private const val PLANT_ADD = 0
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var gridItemAdapter: GridItemAdapter
-    private lateinit var plantEntryList: ArrayList<PlantEntry>
+    private lateinit var plantEntryList: ArrayList<Plant>
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var addButton: Button
     private lateinit var reminderButton: Button
 
-    private lateinit var plantEntryDatabase: PlantEntryDatabase
-    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
-    private lateinit var plantEntryRepository: PlantEntryRepository
-    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
-    private lateinit var plantEntryViewModel: PlantEntryViewModel
+    private lateinit var firebaseDatabase: FirebaseDatabase
+    private lateinit var userRef: DatabaseReference
 
     private val DAILY_WATER_REMINDER_HOUR = 13
 
@@ -44,14 +52,15 @@ class DashboardActivity : AppCompatActivity() {
         setSupportActionBar(findViewById(R.id.dashboard_toolbar))
 
         firebaseAuth = Firebase.auth
+        firebaseDatabase = Firebase.database
+        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
 
-        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
+        userEmail =
+            intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
-        setUpPlantEntryDatabase()
-
-        gridView =  binding.gridView
+        gridView = binding.gridView
         addButton = binding.addButton
         reminderButton = binding.reminderButton
 
@@ -60,16 +69,17 @@ class DashboardActivity : AppCompatActivity() {
         setUpGridItemAdapter()
 
 
-        loadPlantEntryData()
+        loadPlants()
 
         /* Buttons on page */
-        addButton.setOnClickListener(){
-            val addPlantActivityIntent =
-                Intent(this, AddPlantActivity::class.java)
-            startActivity(addPlantActivityIntent)
+        addButton.setOnClickListener() {
+            val intent = Intent(this, AddPlantActivity::class.java)
+            intent.putExtra(getString(R.string.plant_page_type), PLANT_ADD)
+            startActivity(intent)
+
         }
 
-        reminderButton.setOnClickListener(){
+        reminderButton.setOnClickListener() {
             val reminderActivityIntent =
                 Intent(this, CalenderActivity::class.java)
             startActivity(reminderActivityIntent)
@@ -88,10 +98,9 @@ class DashboardActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.action_logout -> {
-                firebaseAuth.signOut()
-                val loginActivityIntent = Intent(this, LoginActivity::class.java)
-                startActivity(loginActivityIntent)
-                finish()
+                val logoutDialogFragment = LogoutDialogFragment()
+                logoutDialogFragment.show(supportFragmentManager,
+                    getString(R.string.logout_dialog_fragment_tag))
                 return true
             }
 
@@ -99,25 +108,34 @@ class DashboardActivity : AppCompatActivity() {
         }
     }
 
-    private fun setUpPlantEntryDatabase() {
-        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
-        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
-        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
-        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
-        plantEntryViewModel = ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
-    }
-
-    private fun setUpGridItemAdapter(){
+    private fun setUpGridItemAdapter() {
         plantEntryList = ArrayList()
 
         gridItemAdapter = GridItemAdapter(this, plantEntryList)
         gridView.adapter = gridItemAdapter
     }
 
-    private fun loadPlantEntryData() {
-        plantEntryViewModel.allPlantEntriesLiveData.observe(this) { updatedList ->
-            gridItemAdapter.replace(updatedList)
-            gridItemAdapter.notifyDataSetChanged()
+    private fun loadPlants() {
+        CoroutineScope(Dispatchers.IO).launch {
+            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val plantEntryList = mutableListOf<Plant>()
+
+                    for (plantSnapshot in snapshot.children) {
+                        val plantEntry = plantSnapshot.getValue(Plant::class.java)
+                        if (plantEntry != null) {
+                            plantEntryList.add(plantEntry)
+                        }
+                    }
+
+                    gridItemAdapter.replace(plantEntryList)
+                    gridItemAdapter.notifyDataSetChanged()
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w("TAG", "Failed to read value.", error.toException())
+                }
+            })
         }
     }
 
