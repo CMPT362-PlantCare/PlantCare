@@ -59,6 +59,7 @@ import java.util.Date
 import java.util.Locale
 
 
+
 private const val EMPTY_STRING = ""
 private const val PLANT_ADD = 0
 private const val PLANT_VIEW = 1
@@ -529,6 +530,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
         plantEntry.potSize = potSize
         plantEntry.imageUri = tempImgUri.toString()
+
+        plantEntry.adoptionDate = calendar.timeInMillis
         plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
         plantEntry.drainageHoles = binding.yesDrainageRadioButton.isChecked
     }
@@ -570,7 +573,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val url = URL("https://perenual.com/api/species-list?key=sk-YqCz656277ea79dc63127&q=$query")
+                val apiKey =  BuildConfig.PLANT_API_KEY
+                val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
+
                 with(url.openConnection() as HttpURLConnection) {
                     requestMethod = "GET"
                     inputStream.bufferedReader().use {
