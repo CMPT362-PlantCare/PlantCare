@@ -145,7 +145,7 @@ class DashboardActivity : AppCompatActivity() {
         val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
 
         val calendar = Calendar.getInstance().apply {
-            if (get(Calendar.HOUR_OF_DAY) >= DAILY_WATER_REMINDER_HOUR) {
+           if (get(Calendar.HOUR_OF_DAY) >= DAILY_WATER_REMINDER_HOUR) {
                 add(Calendar.DAY_OF_MONTH, 1)
             }
 
@@ -155,7 +155,11 @@ class DashboardActivity : AppCompatActivity() {
             set(Calendar.MILLISECOND, 0)
         }
 
-
+        /* for testing Purpose - Will delete at the end*/
+        /*alarmManager.setExact(AlarmManager.RTC_WAKEUP,
+            calendar.timeInMillis,
+            pendingIntent
+        )*/
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
