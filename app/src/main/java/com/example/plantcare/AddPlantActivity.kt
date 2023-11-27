@@ -50,6 +50,8 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -71,6 +73,8 @@ private const val POT_SIZE_KEY = "pot_size_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
+private const val BYTE_ARRAY_SIZE = 1024
+private const val FILE_COPY_OFFSET = 0
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -139,13 +143,18 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
         }
 
-        galleryResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
-        { result: ActivityResult ->
-            if (result.resultCode == Activity.RESULT_OK && result.data?.data != null) {
-                val bitmap = getBitmap(this, result.data!!.data!!)
-                setPicture(myViewModel, bitmap)
+        galleryResult =
+            registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+                if (result.resultCode == Activity.RESULT_OK) {
+                    val selectedImageUri = result.data?.data
+                    if (selectedImageUri != null) {
+                        copyImage(selectedImageUri, tempImgUri)
+
+                        val bitmap = getBitmap(this, tempImgUri)
+                        setPicture(myViewModel, bitmap)
+                    }
+                }
             }
-        }
 
         setUpSpeciesTextWatcher()
     }
@@ -168,7 +177,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                                     }
                                 }
                             }
-
                             override fun onCancelled(error: DatabaseError) {
                                 Log.w("TAG", "Failed to read value.", error.toException())
                             }
@@ -210,6 +218,34 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             ArrayAdapter(this, android.R.layout.simple_list_item_1, it).also { adapter ->
                 binding.speciesAutocomplete.setAdapter(adapter)
             }
+        }
+    }
+
+    private fun copyStream(input: InputStream, output: OutputStream) {
+        val buffer = ByteArray(BYTE_ARRAY_SIZE)
+        var bytesRead: Int
+        while (input.read(buffer).also { bytesRead = it } != INT_VAL_UNKNOWN) {
+            output.write(buffer, FILE_COPY_OFFSET, bytesRead)
+        }
+    }
+
+    private fun copyImage(from: Uri, to: Uri) {
+        try {
+            val inputStream: InputStream? = this.contentResolver.openInputStream(from)
+            if (inputStream != null) {
+                val outputStream: OutputStream? =
+                    this.contentResolver.openOutputStream(to)
+                if (outputStream != null) {
+                    copyStream(inputStream, outputStream)
+                    outputStream.close()
+                }
+                inputStream.close()
+            }
+        } catch (e: SecurityException) {
+            Toast.makeText(
+                this,
+                getString(R.string.file_permission_error_message), Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -291,14 +327,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         CoroutineScope(Dispatchers.IO).launch {
             userRef.child("plants").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position > 0 && position < snapshot.children.toList().size) {
+                    if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
                         val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
                         if(plantEntry != null){
                             populateFields(plantEntry)
                         }
                     }
                 }
-
                 override fun onCancelled(error: DatabaseError) {
                     Log.w("TAG", "Failed to read value.", error.toException())
                 }
@@ -465,7 +500,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         }
                     }
                 }
-
                 override fun onCancelled(error: DatabaseError) {
                     Log.w("TAG", "Failed to read value.", error.toException())
                 }

@@ -34,6 +34,7 @@
     <string name="com_example_plantcare">com.example.plantcare</string>
     <string name="plant_saved_toast_message">Plant Saved!</string>
     <string name="plant_deleted_toast_message">Plant Deleted.</string>
+    <string name="file_permission_error_message">Oops! Looks Like Something Went Wrong. Please Allow File Access Permissions.</string>
     <string name="position_key">position_key</string>
     <string name="plant_page_type">plant_page_type</string>
     <string name="update">Update</string>
