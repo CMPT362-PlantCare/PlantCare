@@ -17,6 +17,7 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
 import android.widget.RadioButton
@@ -56,6 +57,7 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+
 private const val EMPTY_STRING = ""
 private const val PLANT_ADD = 0
 private const val PLANT_VIEW = 1
@@ -82,6 +84,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var imgToSave: Bitmap
     private lateinit var myViewModel: MyViewModel
     private lateinit var query: String
+    private var speciesId = ""
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
@@ -211,6 +214,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun setUpSpeciesTextWatcher() {
+        binding.speciesAutocomplete.onItemClickListener = OnItemClickListener { parent, arg1, pos, id ->
+            if (myViewModel.id.value != null && pos < myViewModel.id.value!!.size) {
+                speciesId = myViewModel.id.value?.get(pos) ?: ""
+            }
+            else {
+                println("invalid autocomplete position")
+            }
+        }
+
         binding.speciesAutocomplete.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {}
 
@@ -476,6 +488,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun setPlantEntryAttributes(plantEntry: Plant) {
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
+        plantEntry.plantSpeciesId = speciesId
         var potSize = 0.0
         val potSizeString = binding.sizeEditText.text.toString()
         if (potSizeString.isNotEmpty()) {
@@ -530,16 +543,20 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     requestMethod = "GET"
                     inputStream.bufferedReader().use {
                         val speciesList = ArrayList<String>()
+                        val idList = ArrayList<String>()
                         it.lines().forEach { line ->
                             var response = JSONObject(line)
                             var valueArray = response.getJSONArray("data")
                             for (t in 0 until valueArray.length()) {
                                 var name = valueArray.getJSONObject(t).getString("common_name")
                                 speciesList.add(name)
+                                var id = valueArray.getJSONObject(t).getString("id")
+                                idList.add(id)
                             }
                         }
                         runOnUiThread {
                             this@AddPlantActivity.myViewModel.species.value = speciesList
+                            this@AddPlantActivity.myViewModel.id.value = idList
                         }
                     }
                 }

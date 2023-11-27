@@ -11,6 +11,8 @@ data class Plant(
 
     var plantSpecies: String? = null,
 
+    var plantSpeciesId: String? = null,
+
     var potSize: Double? = null,
 
     var terracottaPot: Boolean? = null,
