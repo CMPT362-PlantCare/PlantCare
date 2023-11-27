@@ -570,7 +570,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val url = URL("https://perenual.com/api/species-list?key=sk-YqCz656277ea79dc63127=$query")
+                val url = URL("https://perenual.com/api/species-list?key=sk-YqCz656277ea79dc63127&q=$query")
                 with(url.openConnection() as HttpURLConnection) {
                     requestMethod = "GET"
                     inputStream.bufferedReader().use {
