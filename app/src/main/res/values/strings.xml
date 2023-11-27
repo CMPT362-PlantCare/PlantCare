@@ -38,6 +38,8 @@
     <string name="plant_page_type">plant_page_type</string>
     <string name="update">Update</string>
     <string name="oops_missing_external_file_directory">Oops! Missing External File Directory</string>
+    <string name="img_date_format">yyyyMMdd_HHmmss</string>
+    <string name="img_name_format">image_%1$s</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

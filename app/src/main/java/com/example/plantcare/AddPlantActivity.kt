@@ -14,6 +14,7 @@ import android.os.Bundle
 import android.provider.MediaStore
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.ArrayAdapter
@@ -30,18 +31,24 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
+import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
-import java.io.InputStream
-import java.io.OutputStream
 import java.net.HttpURLConnection
 import java.net.URL
 import java.text.SimpleDateFormat
@@ -62,8 +69,6 @@ private const val POT_SIZE_KEY = "pot_size_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
-private const val BYTE_ARRAY_SIZE = 1024
-private const val FILE_COPY_OFFSET = 0
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
@@ -78,11 +83,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var myViewModel: MyViewModel
     private lateinit var query: String
 
-    private lateinit var plantEntryDatabase: PlantEntryDatabase
-    private lateinit var plantEntryDatabaseDao: PlantEntryDatabaseDao
-    private lateinit var plantEntryRepository: PlantEntryRepository
-    private lateinit var plantEntryViewModelFactory: PlantEntryViewModelFactory
-    private lateinit var plantEntryViewModel: PlantEntryViewModel
+    private lateinit var firebaseDatabase: FirebaseDatabase
+    private lateinit var userRef: DatabaseReference
 
     private var position: Int = DEFAULT_POSITION
     private var pageType: Int = PLANT_VIEW
@@ -95,6 +97,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         super.onCreate(savedInstanceState)
 
         firebaseAuth = Firebase.auth
+        firebaseDatabase = Firebase.database
+        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
+
         binding = ActivityAddplantBinding.inflate(layoutInflater)
 
         position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
@@ -102,7 +107,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
-        setUpPlantEntryDatabase()
         requestPermissions()
         initButtons()
         reviveUserInputs(savedInstanceState)
@@ -148,8 +152,26 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         return when (item.itemId) {
             R.id.action_delete -> {
                 if (position != DEFAULT_POSITION) {
-                    plantEntryViewModel.delete(position)
-                    finish()
+                    CoroutineScope(Dispatchers.IO).launch {
+                        userRef.child("plants").addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onDataChange(snapshot: DataSnapshot) {
+                                if (position >= 0 && position < snapshot.childrenCount) {
+                                    val plantSnapshot = snapshot.children.toList()[position]
+                                    val plantId = plantSnapshot.key
+
+                                    if (plantId != null) {
+                                        userRef.child("plants").child(plantId).removeValue()
+                                        finish()
+                                    }
+                                }
+                            }
+
+                            override fun onCancelled(error: DatabaseError) {
+                                Log.w("TAG", "Failed to read value.", error.toException())
+                            }
+                        })
+                    }
+
                     Toast.makeText(
                         this,
                         getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
@@ -158,7 +180,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 return true
             }
 
-            else -> super.onOptionsItemSelected(item)
+            else -> return super.onOptionsItemSelected(item)
         }
     }
 
@@ -254,53 +276,31 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun getPlantEntryAndPopulateFields() {
-        plantEntryViewModel.allPlantEntriesLiveData.observe(this) {
-            if (position != null && position != -1) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val plantEntry = plantEntryViewModel.get(position)
-                    if (plantEntry != null) {
-                        populateFields(plantEntry)
+        CoroutineScope(Dispatchers.IO).launch {
+            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (position != -1 && position > 0 && position < snapshot.children.toList().size) {
+                        val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
+                        if(plantEntry != null){
+                            populateFields(plantEntry)
+                        }
                     }
                 }
-            }
-        }
-    }
 
-    private fun copyStream(input: InputStream, output: OutputStream) {
-        val buffer = ByteArray(BYTE_ARRAY_SIZE)
-        var bytesRead: Int
-        while (input.read(buffer).also { bytesRead = it } != INT_VAL_UNKNOWN) {
-            output.write(buffer, FILE_COPY_OFFSET, bytesRead)
-        }
-    }
-
-    private fun copyImage(from: Uri, to: Uri) {
-        try {
-            val inputStream: InputStream? = this.contentResolver.openInputStream(from)
-            if (inputStream != null) {
-                val outputStream: OutputStream? =
-                    this.contentResolver.openOutputStream(to)
-                if (outputStream != null) {
-                    copyStream(inputStream, outputStream)
-                    outputStream.close()
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w("TAG", "Failed to read value.", error.toException())
                 }
-                inputStream.close()
-            }
-        } catch (e: SecurityException) {
-            Toast.makeText(
-                this,
-                "File Permission Error", Toast.LENGTH_LONG
-            ).show()
+            })
         }
     }
 
     private fun generateImageName(): String {
-        val dateFormat = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault())
+        val dateFormat = SimpleDateFormat(getString(R.string.img_date_format), Locale.getDefault())
         val currentTimeStamp = dateFormat.format(Date())
-        return "image_$currentTimeStamp"
+        return getString(R.string.img_name_format, currentTimeStamp)
     }
 
-    private fun populateFields(plantEntry: PlantEntry) {
+    private fun populateFields(plantEntry: Plant) {
         runOnUiThread {
             tempImgUri = Uri.parse(plantEntry.imageUri)
 
@@ -312,16 +312,20 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
             binding.sizeEditText.setText(plantEntry.potSize.toString())
 
-            if (plantEntry.drainageHoles) {
-                binding.yesDrainageRadioButton.isChecked = true
-            } else {
-                binding.noDrainageRadioButton.isChecked = true
+            if (plantEntry.drainageHoles != null) {
+                if(plantEntry.drainageHoles == true){
+                    binding.yesDrainageRadioButton.isChecked = true
+                } else {
+                    binding.noDrainageRadioButton.isChecked = true
+                }
             }
 
-            if (plantEntry.terracottaPot) {
-                binding.yesTerracottaRadioButton.isChecked = true
-            } else {
-                binding.noTerracottaRadioButton.isChecked = true
+            if(plantEntry.terracottaPot != null){
+                if (plantEntry.terracottaPot == true) {
+                    binding.yesTerracottaRadioButton.isChecked = true
+                } else {
+                    binding.noTerracottaRadioButton.isChecked = true
+                }
             }
         }
     }
@@ -370,15 +374,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
 
         return true
-    }
-
-    private fun setUpPlantEntryDatabase() {
-        plantEntryDatabase = PlantEntryDatabase.getInstance(this)
-        plantEntryDatabaseDao = plantEntryDatabase.plantEntryDatabaseDao
-        plantEntryRepository = PlantEntryRepository(plantEntryDatabaseDao)
-        plantEntryViewModelFactory = PlantEntryViewModelFactory(plantEntryRepository)
-        plantEntryViewModel =
-            ViewModelProvider(this, plantEntryViewModelFactory)[PlantEntryViewModel::class.java]
     }
 
     private fun requestPermissions() {
@@ -432,40 +427,53 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             binding.addButton.text = getString(R.string.update)
             binding.addButton.setOnClickListener {
                 updatePlant()
-                finish()
             }
         } else {
             binding.addButton.text = getString(R.string.add)
             binding.addButton.setOnClickListener {
                 savePlantToDatabase()
-                finish()
             }
         }
     }
 
     private fun updatePlant() {
-        plantEntryViewModel.allPlantEntriesLiveData.observe(this) {
-            if (position != null && position != -1) {
-                CoroutineScope(Dispatchers.IO).launch {
-                    val plantEntry = plantEntryViewModel.get(position)
-                    if (plantEntry != null) {
-                        setPlantEntryAttributes(plantEntry)
-                        plantEntryViewModel.update(plantEntry)
+        CoroutineScope(Dispatchers.IO).launch {
+            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    if (position != -1 && position >=0 && position < snapshot.children.toList().size) {
+                        val plantSnapshot =  snapshot.children.toList()[position]
+                        val plantId = plantSnapshot.key
+                        val plantEntry =  plantSnapshot.getValue(Plant::class.java)
+                        if(plantEntry != null){
+                            setPlantEntryAttributes(plantEntry)
+                        }
+                        if (plantId != null) {
+                            userRef.child("plants").child(plantId).setValue(plantEntry)
+                            finish()
+                        }
                     }
                 }
-            }
+
+                override fun onCancelled(error: DatabaseError) {
+                    Log.w("TAG", "Failed to read value.", error.toException())
+                }
+            })
         }
     }
 
     private fun savePlantToDatabase() {
-        val plantEntry = PlantEntry()
+        val plantEntry = Plant()
         setPlantEntryAttributes(plantEntry)
-        plantEntryViewModel.insert(plantEntry)
-        Toast.makeText(this, getString(R.string.plant_saved_toast_message), Toast.LENGTH_SHORT)
-            .show()
+        val plantId = userRef.child("plants").push().key
+        if (plantId != null) {
+            CoroutineScope(Dispatchers.IO).launch {
+                userRef.child("plants").child(plantId).setValue(plantEntry).await()
+                finish()
+            }
+        }
     }
 
-    private fun setPlantEntryAttributes(plantEntry: PlantEntry) {
+    private fun setPlantEntryAttributes(plantEntry: Plant) {
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
         var potSize = 0.0
@@ -540,6 +548,4 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
         }
     }
-
-
 }

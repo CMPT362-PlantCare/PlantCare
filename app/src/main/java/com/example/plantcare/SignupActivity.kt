@@ -7,18 +7,22 @@ import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 
 class SignupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivitySignupBinding
     private lateinit var firebaseAuth: FirebaseAuth
+    private lateinit var firebaseDatabase: FirebaseDatabase
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         binding = ActivitySignupBinding.inflate(layoutInflater)
         setContentView(binding.root)
         firebaseAuth = Firebase.auth
+        firebaseDatabase = Firebase.database
 
         handleUserAlreadyLoggedIn()
         handleSignup()
@@ -53,6 +57,22 @@ class SignupActivity : AppCompatActivity() {
                     firebaseAuth.createUserWithEmailAndPassword(userEmail, userPassword)
                         .addOnCompleteListener { task ->
                             if (task.isSuccessful) {
+                                // Get the UID of the newly created user
+                                val user = firebaseAuth.currentUser
+                                val uid = user?.uid
+                                val userEmail = user?.email
+
+                                // Create a Users object with UID and any additional user data
+                                val userObject = User()
+                                userObject.uid = uid
+                                userObject.email = userEmail
+
+                                // Save the Users object to the "Users" node in the database
+                                val usersReference = firebaseDatabase.reference.child("Users")
+                                if (uid != null) {
+                                    usersReference.child(uid).setValue(userObject)
+                                }
+
                                 val loginActivityIntent = Intent(this, LoginActivity::class.java)
                                 startActivity(loginActivityIntent)
                                 finish()

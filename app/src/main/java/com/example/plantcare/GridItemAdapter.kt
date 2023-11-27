@@ -12,7 +12,7 @@ import android.widget.TextView
 
 private const val PLANT_VIEW = 1
 class GridItemAdapter(private val context: Context,
-                      private var plantEntryList: List<PlantEntry>) : BaseAdapter() {
+                      private var plantEntryList: List<Plant>) : BaseAdapter() {
 
     override fun getCount(): Int {
         return plantEntryList.size
@@ -54,11 +54,10 @@ class GridItemAdapter(private val context: Context,
             intent.putExtra(context.getString(R.string.plant_page_type), PLANT_VIEW )
             context.startActivity(intent)
         }
-
         return view
     }
 
-    fun replace(newPlantList: List<PlantEntry>) {
+    fun replace(newPlantList: List<Plant>) {
         plantEntryList = newPlantList
     }
 
