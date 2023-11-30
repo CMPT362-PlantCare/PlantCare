@@ -26,6 +26,8 @@
             android:name="PLANT_API_KEY"
             android:value="${PLANT_API_KEY}"/>
 
+        <activity android:name=".PlantInfoActivity"
+            android:exported="false"/>
         <activity android:name=".ScheduleActivity"
             android:exported="false"/>
         <activity
