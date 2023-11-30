@@ -1,10 +1,6 @@
 package com.example.plantcare
 
-import LogoutDialogFragment
-import android.app.AlarmManager
-import android.app.PendingIntent
 import android.content.Intent
-import android.icu.util.Calendar
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
@@ -14,7 +10,6 @@ import android.widget.GridView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.net.toUri
 import androidx.lifecycle.lifecycleScope
-import com.example.plantcare.databinding.ActivityDashboardBinding
 import com.example.plantcare.databinding.ActivityPlantInfoBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -34,12 +29,6 @@ class PlantInfoActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPlantInfoBinding
     private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var gridItemAdapter: GridItemAdapter
-    private lateinit var plantEntryList: ArrayList<Plant>
-    private lateinit var userEmail: String
-    private lateinit var gridView: GridView
-    private lateinit var addButton: Button
-    private lateinit var scheduleButton: Button
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
