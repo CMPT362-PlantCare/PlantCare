@@ -48,9 +48,8 @@ class GridItemAdapter(private val context: Context,
         viewHolder.textView!!.text = plantEntryList[position].plantName
 
         view.setOnClickListener {
-            val intent = Intent(context, AddPlantActivity::class.java)
+            val intent = Intent(context, PlantInfoActivity::class.java)
             intent.putExtra(context.getString(R.string.position_key), position)
-            intent.putExtra(context.getString(R.string.plant_page_type), AddPlantActivity.PLANT_VIEW )
             context.startActivity(intent)
         }
         return view

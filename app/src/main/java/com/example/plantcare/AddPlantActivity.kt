@@ -333,6 +333,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
                         if(plantEntry != null){
                             populateFields(plantEntry)
+                            speciesId = plantEntry.plantSpeciesId ?: ""
                         }
                     }
                 }
@@ -531,6 +532,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             potSize = potSizeString.toDouble()
         }
         plantEntry.potSize = potSize
+        val freq = Helpers.getWateringFreq(speciesId)
+        plantEntry.wateringFreq = if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()
         plantEntry.imageUri = tempImgUri.toString()
 
         plantEntry.adoptionDate = calendar.timeInMillis

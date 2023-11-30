@@ -22,4 +22,6 @@ data class Plant(
     var adoptionDate: Long? = null,
 
     var imageUri: String? = null,
+
+    var wateringFreq: Int = 10,
 )
