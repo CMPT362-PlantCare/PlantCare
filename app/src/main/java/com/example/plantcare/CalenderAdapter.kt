@@ -19,7 +19,6 @@ import androidx.core.content.ContextCompat
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
 import com.google.android.material.textview.MaterialTextView
 
-private const val PLANT_VIEW = 1
 class CalenderAdapter(private val context: Context,
                       private var plantEntryList: List<Plant>) : BaseAdapter() {
 

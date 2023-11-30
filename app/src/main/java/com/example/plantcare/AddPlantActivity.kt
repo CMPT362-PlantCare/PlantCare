@@ -61,8 +61,6 @@ import java.util.Locale
 
 
 private const val EMPTY_STRING = ""
-private const val PLANT_ADD = 0
-private const val PLANT_VIEW = 1
 private const val INT_VAL_UNKNOWN = -1
 private const val DEFAULT_POSITION = -1
 private const val CHECKED_TP_KEY = "checked_tp_key"
@@ -77,6 +75,10 @@ private const val BYTE_ARRAY_SIZE = 1024
 private const val FILE_COPY_OFFSET = 0
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
+    companion object {
+        const val PLANT_ADD = 0
+        const val PLANT_VIEW = 1
+    }
 
     private lateinit var binding: ActivityAddplantBinding
     private lateinit var firebaseAuth: FirebaseAuth

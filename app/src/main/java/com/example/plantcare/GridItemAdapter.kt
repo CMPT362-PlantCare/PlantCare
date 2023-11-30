@@ -10,7 +10,6 @@ import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
 
-private const val PLANT_VIEW = 1
 class GridItemAdapter(private val context: Context,
                       private var plantEntryList: List<Plant>) : BaseAdapter() {
 
@@ -51,7 +50,7 @@ class GridItemAdapter(private val context: Context,
         view.setOnClickListener {
             val intent = Intent(context, AddPlantActivity::class.java)
             intent.putExtra(context.getString(R.string.position_key), position)
-            intent.putExtra(context.getString(R.string.plant_page_type), PLANT_VIEW )
+            intent.putExtra(context.getString(R.string.plant_page_type), AddPlantActivity.PLANT_VIEW )
             context.startActivity(intent)
         }
         return view
