@@ -32,6 +32,7 @@ import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
@@ -90,6 +91,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var imgToSave: Bitmap
     private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
+    private lateinit var navigationView: BottomNavigationView
     private var speciesId = ""
 
     private lateinit var firebaseDatabase: FirebaseDatabase
@@ -116,6 +118,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
+
+        navigationView = binding.bottomNavigation
+
         requestPermissions()
         initButtons()
         reviveUserInputs(savedInstanceState)
@@ -159,6 +164,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
 
         setUpSpeciesTextWatcher()
+
+        /* Bottom Navigator */
+        bottomNavigation()
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -573,6 +581,32 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         viewModel.image.value = bitmap
         imgToSave = bitmap
         saveImgFlag = true
+    }
+
+    private fun bottomNavigation(){
+        navigationView.selectedItemId = R.id.add_plant
+        navigationView.setOnNavigationItemSelectedListener{ item ->
+            when (item.itemId) {
+                R.id.dashboard_home -> {
+                    val intent = Intent(this, DashboardActivity::class.java)
+                    startActivity(intent)
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.calender -> {
+                    val intent = Intent(this, ScheduleActivity::class.java)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.reminder -> {
+                    val intent = Intent(this, CalenderActivity::class.java)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                else -> false
+            }
+        }
     }
 
     inner class MyRunnable : Runnable {

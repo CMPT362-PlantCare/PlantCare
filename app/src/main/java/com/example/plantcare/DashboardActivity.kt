@@ -14,6 +14,7 @@ import android.widget.Button
 import android.widget.GridView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityDashboardBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
@@ -35,8 +36,7 @@ class DashboardActivity : AppCompatActivity() {
     private lateinit var plantEntryList: ArrayList<Plant>
     private lateinit var userEmail: String
     private lateinit var gridView: GridView
-    private lateinit var addButton: Button
-    private lateinit var scheduleButton: Button
+    private lateinit var navigationView: BottomNavigationView
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
@@ -52,14 +52,12 @@ class DashboardActivity : AppCompatActivity() {
         firebaseDatabase = Firebase.database
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
 
-        userEmail =
-            intent.getStringExtra(getString(R.string.user_email_intent_tag))!!.substringBefore('@')
+        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))?.substringBefore('@') ?: ""
 
         binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
 
         gridView = binding.gridView
-        addButton = binding.addButton
-        scheduleButton = binding.scheduleBtn
+        navigationView = binding.bottomNavigation
 
 
         /* User's added Plants in gridView*/
@@ -68,20 +66,8 @@ class DashboardActivity : AppCompatActivity() {
 
         loadPlants()
 
-        /* Buttons on page */
-        addButton.setOnClickListener() {
-            val intent = Intent(this, AddPlantActivity::class.java)
-            intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
-            startActivity(intent)
-
-        }
-
-        scheduleButton.setOnClickListener(){
-
-            val reminderActivityIntent =
-                Intent(this, ScheduleActivity::class.java)
-            startActivity(reminderActivityIntent)
-        }
+        /* Bottom Navigator */
+        bottomNavigation()
 
         /* Daily watering notification*/
         wateringNotification()
@@ -154,5 +140,33 @@ class DashboardActivity : AppCompatActivity() {
             pendingIntent
         )
 
+    }
+
+    private fun bottomNavigation(){
+        navigationView.selectedItemId = R.id.dashboard_home
+        navigationView.setOnNavigationItemSelectedListener{ item ->
+                when (item.itemId) {
+                    R.id.add_plant -> {
+                        val intent = Intent(this, AddPlantActivity::class.java)
+                        intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
+                        startActivity(intent)
+
+                        return@setOnNavigationItemSelectedListener true
+                    }
+                    R.id.calender -> {
+                        val intent = Intent(this, ScheduleActivity::class.java)
+                        startActivity(intent)
+
+                        return@setOnNavigationItemSelectedListener true
+                    }
+                    R.id.reminder -> {
+                        val intent = Intent(this, CalenderActivity::class.java)
+                        startActivity(intent)
+
+                        return@setOnNavigationItemSelectedListener true
+                    }
+                    else -> false
+                }
+        }
     }
 }

@@ -1,23 +1,13 @@
 package com.example.plantcare
 
 
-import android.net.Uri
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
-import android.view.View
 import android.widget.GridView
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.example.plantcare.databinding.ActivityCalenderBinding
-import com.google.android.material.circularreveal.cardview.CircularRevealCardView
-import com.google.android.material.textview.MaterialTextView
+import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
@@ -42,6 +32,7 @@ class CalenderActivity : AppCompatActivity() {
     private lateinit var gridView: GridView
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
+    private lateinit var navigationView: BottomNavigationView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,10 +45,14 @@ class CalenderActivity : AppCompatActivity() {
         firebaseDatabase = Firebase.database
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
         gridView = binding.gridView
+        navigationView = binding.bottomNavigation
 
 
         setUpCalenderAdapter()
         fetchPlants()
+
+        /* Bottom Navigator */
+        bottomNavigation()
     }
 
     private fun setUpCalenderAdapter() {
@@ -90,6 +85,33 @@ class CalenderActivity : AppCompatActivity() {
             })
         }
 
+    }
+
+    private fun bottomNavigation(){
+        navigationView.selectedItemId = R.id.reminder
+        navigationView.setOnNavigationItemSelectedListener{ item ->
+            when (item.itemId) {
+                R.id.dashboard_home -> {
+                    val intent = Intent(this, DashboardActivity::class.java)
+                    startActivity(intent)
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.add_plant -> {
+                    val intent = Intent(this, AddPlantActivity::class.java)
+                    intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.calender -> {
+                    val intent = Intent(this, ScheduleActivity::class.java)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                else -> false
+            }
+        }
     }
 
 }
