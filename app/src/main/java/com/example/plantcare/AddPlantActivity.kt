@@ -17,6 +17,7 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.webkit.MimeTypeMap
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
@@ -42,6 +43,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -303,7 +305,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         binding.imageView.setImageDrawable(defaultImageDrawable)
 
         if (!isImageNameSet) {
-            imageName = generateImageName()
+            imageName = generateImageName("")
             isImageNameSet = true
         }
 
@@ -357,10 +359,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
-    private fun generateImageName(): String {
+    private fun generateImageName(extension: String): String {
         val dateFormat = SimpleDateFormat(getString(R.string.img_date_format), Locale.getDefault())
         val currentTimeStamp = dateFormat.format(Date())
-        return getString(R.string.img_name_format, currentTimeStamp)
+        return getString(R.string.img_name_format, currentTimeStamp, extension)
     }
 
     private fun populateFields(plantEntry: Plant) {
@@ -547,6 +549,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
         plantEntry.wateringFreq = if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
+
+        val extension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(contentResolver.getType(tempImgUri))
+        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(generateImageName(extension!!))
+        firebaseStorageRef.putFile(tempImgUri).addOnFailureListener { exception ->
+            Log.e(javaClass.simpleName, exception.message, exception)
+        }
+
         plantEntry.imageUri = tempImgUri.toString()
 
         plantEntry.adoptionDate = calendar.timeInMillis
