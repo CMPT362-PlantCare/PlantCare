@@ -169,6 +169,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         bottomNavigation()
     }
 
+    override fun onResume() {
+        super.onResume()
+        navigationView.menu.getItem(1).isChecked = true;
+    }
+
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
         return when (item.itemId) {

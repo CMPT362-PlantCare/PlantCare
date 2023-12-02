@@ -55,6 +55,11 @@ class CalenderActivity : AppCompatActivity() {
         bottomNavigation()
     }
 
+    override fun onResume() {
+        super.onResume()
+        navigationView.menu.getItem(3).isChecked = true;
+    }
+
     private fun setUpCalenderAdapter() {
         plantEntryList = ArrayList()
 

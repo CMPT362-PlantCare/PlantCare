@@ -74,6 +74,11 @@ class DashboardActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        navigationView.menu.getItem(0).isChecked = true;
+    }
+
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         menuInflater.inflate(R.menu.dashboard_toolbar_menu, menu)
         return true

@@ -41,6 +41,11 @@ class ScheduleActivity : AppCompatActivity() {
 
     }
 
+    override fun onResume() {
+        super.onResume()
+        navigationView.menu.getItem(2).isChecked = true;
+    }
+
     private fun calendarClicked() {
 
     }
