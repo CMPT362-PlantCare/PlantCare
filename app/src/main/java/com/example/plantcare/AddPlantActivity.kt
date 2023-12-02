@@ -546,7 +546,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
-        plantEntry.wateringFreq = if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()
+        plantEntry.wateringFreq = if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
         plantEntry.imageUri = tempImgUri.toString()
 
         plantEntry.adoptionDate = calendar.timeInMillis
