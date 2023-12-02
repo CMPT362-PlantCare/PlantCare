@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -21,7 +21,9 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:layout_margin="15dp">
+        android:layout_margin="15dp"
+        android:id="@+id/text"
+        android:layout_below="@+id/dashboard_toolbar">
 
         <TextView
             android:id="@+id/greeting_text_view"
@@ -30,40 +32,32 @@
             android:layout_margin="10dp"
             android:textSize="30sp"
             android:gravity="start"
-            android:layout_weight="1"/>
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <Button app:backgroundTint="@color/dark_green"
-                android:id="@+id/addButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:drawableLeft="@drawable/flower_icon_white"
-                android:textSize="15sp"
-                android:text="@string/add_button"
-                android:textColor="@color/white"/>
-
-            <Button app:backgroundTint="@color/dark_green"
-                android:id="@+id/scheduleBtn"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="16dp"
-                android:drawableLeft="@drawable/flower_icon_white"
-                android:textSize="15sp"
-                android:text="@string/schedule_button"
-                android:textColor="@color/white"/>
-        </LinearLayout>
-
+            android:layout_weight="1" />
     </LinearLayout>
 
     <GridView
         android:id="@+id/gridView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:numColumns="2" />
+        android:numColumns="2"
+        android:layout_below="@+id/text"/>
 
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/bottom_navigation"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="15dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginBottom="15dp"
+        android:background="@drawable/bottom_navigation_round_corner"
+        android:elevation="2dp"
+        app:itemIconSize="30dp"
+        app:itemIconTint="@drawable/bottom_navigation_item_selector"
+        app:itemRippleColor="@android:color/transparent"
+        app:itemActiveIndicatorStyle="@android:color/transparent"
+        app:labelVisibilityMode="unlabeled"
+        app:menu="@menu/bottom_navigation_item_menu" />
 
-</LinearLayout>
+</RelativeLayout>

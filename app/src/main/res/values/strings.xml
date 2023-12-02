@@ -15,10 +15,12 @@
 
     <!-- DASHBOARD ACTIVITY -->
     <string name="greeting_message">Hello, %s</string>
-    <string name="add_button">Add Plant</string>
     <string name="logout_confirmation_title">Logout</string>
     <string name="logout_confirmation_message">Are you sure you want to log out?</string>
-    <string name="reminder_button">Reminders</string>
+    <string name="dashboard_bottom_nav">Home</string>
+    <string name="add_plant_bottom_nav">Add Plant</string>
+    <string name="calender_bottom_nav">Calender</string>
+    <string name="reminder_bottom_nav">Reminders</string>
 
     <!-- ADD PLANT ACTIVITY -->
     <string name="yes">Yes</string>
@@ -33,7 +35,6 @@
     <string name="select_date">Select date</string>
     <string name="add_photo">Add photo</string>
     <string name="drainage_holes">Drainage holes?</string>
-    <string name="schedule_button">Schedule</string>
     <string name="com_example_plantcare">com.example.plantcare</string>
     <string name="plant_saved_toast_message">Plant Saved!</string>
     <string name="plant_deleted_toast_message">Plant Deleted.</string>

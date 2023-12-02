@@ -7,17 +7,22 @@ import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityScheduleBinding
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class ScheduleActivity : AppCompatActivity() {
     private lateinit var binding: ActivityScheduleBinding
     private lateinit var date : String
     private lateinit var calendar : Calendar
     private lateinit var eventListAdapter: ArrayAdapter<WateringEventEntry>
+    private lateinit var navigationView: BottomNavigationView
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityScheduleBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.toolbar))
+
+        navigationView = binding.bottomNavigation
 
         calendar = Calendar.getInstance()
         getInitialDate()
@@ -31,10 +36,14 @@ class ScheduleActivity : AppCompatActivity() {
             calendarClicked()
         }
 
-        binding.remindersBtn.setOnClickListener {
-            val intent = Intent(this, CalenderActivity::class.java)
-            startActivity(intent)
-        }
+        /* Bottom Navigator */
+        bottomNavigation()
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        navigationView.menu.getItem(2).isChecked = true;
     }
 
     private fun calendarClicked() {
@@ -47,6 +56,33 @@ class ScheduleActivity : AppCompatActivity() {
         val year = calendar.get(Calendar.YEAR)
         date = (month+1).toString() + "/" + day.toString() + "/" + year.toString()
         Toast.makeText(this, date, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun bottomNavigation(){
+        navigationView.selectedItemId = R.id.calender
+        navigationView.setOnNavigationItemSelectedListener{ item ->
+            when (item.itemId) {
+                R.id.dashboard_home -> {
+                    val intent = Intent(this, DashboardActivity::class.java)
+                    startActivity(intent)
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.add_plant -> {
+                    val intent = Intent(this, AddPlantActivity::class.java)
+                    intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                R.id.reminder -> {
+                    val intent = Intent(this, CalenderActivity::class.java)
+                    startActivity(intent)
+
+                    return@setOnNavigationItemSelectedListener true
+                }
+                else -> false
+            }
+        }
     }
 
 }

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/dashboard_home"
+        android:title="@string/dashboard_bottom_nav"
+        android:icon="@drawable/dashboard_icon"/>
+    <item
+        android:id="@+id/add_plant"
+        android:title="@string/add_plant_bottom_nav"
+        android:icon="@drawable/flower_icon_white"/>
+
+    <item
+        android:id="@+id/calender"
+        android:title="@string/calender_bottom_nav"
+        android:icon="@drawable/calender_icon"/>
+
+    <item
+        android:id="@+id/reminder"
+        android:title="@string/reminder_bottom_nav"
+        android:icon="@drawable/reminder_icon"/>
+</menu>
