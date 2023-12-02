@@ -17,7 +17,6 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.webkit.MimeTypeMap
 import android.widget.AdapterView.OnItemClickListener
 import android.widget.ArrayAdapter
 import android.widget.DatePicker
@@ -60,7 +59,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-
 
 
 private const val EMPTY_STRING = ""
@@ -182,22 +180,22 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             R.id.action_delete -> {
                 if (position != DEFAULT_POSITION) {
                     CoroutineScope(Dispatchers.IO).launch {
-                        userRef.child("plants").addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                if (position >= 0 && position < snapshot.childrenCount) {
-                                    val plantSnapshot = snapshot.children.toList()[position]
-                                    val plantId = plantSnapshot.key
-
-                                    if (plantId != null) {
-                                        userRef.child("plants").child(plantId).removeValue()
-                                        finish()
+                        userRef.child("plants")
+                            .addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onDataChange(snapshot: DataSnapshot) {
+                                    if (position >= 0 && position < snapshot.childrenCount) {
+                                        val plantSnapshot = snapshot.children.toList()[position]
+                                        val plantId = plantSnapshot.key
+                                        if (plantId != null) {
+                                            userRef.child("plants").child(plantId).removeValue()
+                                            finish()
+                                        }
                                     }
                                 }
-                            }
-                            override fun onCancelled(error: DatabaseError) {
-                                Log.w("TAG", "Failed to read value.", error.toException())
-                            }
-                        })
+                                override fun onCancelled(error: DatabaseError) {
+                                    Log.w("TAG", "Failed to read value.", error.toException())
+                                }
+                            })
                     }
 
                     Toast.makeText(
@@ -267,14 +265,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun setUpSpeciesTextWatcher() {
-        binding.speciesAutocomplete.onItemClickListener = OnItemClickListener { parent, arg1, pos, id ->
-            if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
-                speciesId = addPlantViewModel.id.value?.get(pos) ?: ""
+        binding.speciesAutocomplete.onItemClickListener =
+            OnItemClickListener { parent, arg1, pos, id ->
+                if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
+                    speciesId = addPlantViewModel.id.value?.get(pos) ?: ""
+                } else {
+                    println("invalid autocomplete position")
+                }
             }
-            else {
-                println("invalid autocomplete position")
-            }
-        }
 
         binding.speciesAutocomplete.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {}
@@ -299,13 +297,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun setUpTempImage() {
         // Load the default image drawable
-        val defaultImageDrawable = ContextCompat.getDrawable(this, R.drawable.default_plant_profile_pic)
+        val defaultImageDrawable =
+            ContextCompat.getDrawable(this, R.drawable.default_plant_profile_pic)
 
         // Set the default image to the ImageView
         binding.imageView.setImageDrawable(defaultImageDrawable)
 
         if (!isImageNameSet) {
-            imageName = generateImageName("")
+            imageName = generateImageName()
             isImageNameSet = true
         }
 
@@ -322,7 +321,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             // Save the Bitmap to the tempImgFile
             try {
                 val stream = FileOutputStream(tempImgFile)
-                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
                 stream.flush()
                 stream.close()
             } catch (e: IOException) {
@@ -335,8 +334,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 tempImgFile
             )
         } else {
-            Toast.makeText(this,
-                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -345,13 +346,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             userRef.child("plants").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
-                        val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
-                        if(plantEntry != null){
+                        val plantEntry =
+                            snapshot.children.toList()[position].getValue(Plant::class.java)
+                        if (plantEntry != null) {
                             populateFields(plantEntry)
                             speciesId = plantEntry.plantSpeciesId ?: ""
                         }
                     }
                 }
+
                 override fun onCancelled(error: DatabaseError) {
                     Log.w("TAG", "Failed to read value.", error.toException())
                 }
@@ -359,15 +362,65 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
-    private fun generateImageName(extension: String): String {
+    private fun generateImageName(): String {
         val dateFormat = SimpleDateFormat(getString(R.string.img_date_format), Locale.getDefault())
         val currentTimeStamp = dateFormat.format(Date())
-        return getString(R.string.img_name_format, currentTimeStamp, extension)
+        return getString(R.string.img_name_format, currentTimeStamp)
     }
 
     private fun populateFields(plantEntry: Plant) {
         runOnUiThread {
-            tempImgUri = Uri.parse(plantEntry.imageUri)
+            if (plantEntry.imageName != null) {
+                val imgName = plantEntry.imageName
+                imageName = imgName!!
+                val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
+                val externalFilesDir = getExternalFilesDir(null)
+
+                if (externalFilesDir != null) {
+                    // Create a File for the temp image
+                    tempImgFile = File(externalFilesDir, imageName)
+
+                    // Check if the file exists
+                    if (!tempImgFile.exists()) {
+                        // If the file doesn't exist, proceed with the download
+                        firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                            // Successfully downloaded the byte array
+                            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+                            // Save the Bitmap to the tempImgFile
+                            try {
+                                val stream = FileOutputStream(tempImgFile)
+                                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                stream.flush()
+                                stream.close()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+
+                            tempImgUri = FileProvider.getUriForFile(
+                                this,
+                                getString(R.string.com_example_plantcare),
+                                tempImgFile
+                            )
+                        }.addOnFailureListener { exception ->
+                            // Handle any errors that occurred during the download
+                            Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                        }
+                    } else {
+                        // If the file already exists, use it directly
+                        tempImgUri = FileProvider.getUriForFile(
+                            this,
+                            getString(R.string.com_example_plantcare),
+                            tempImgFile
+                        )
+                    }
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
 
             binding.imageView.setImageURI(tempImgUri)
 
@@ -378,14 +431,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             binding.sizeEditText.setText(plantEntry.potSize.toString())
 
             if (plantEntry.drainageHoles != null) {
-                if(plantEntry.drainageHoles == true){
+                if (plantEntry.drainageHoles == true) {
                     binding.yesDrainageRadioButton.isChecked = true
                 } else {
                     binding.noDrainageRadioButton.isChecked = true
                 }
             }
 
-            if(plantEntry.terracottaPot != null){
+            if (plantEntry.terracottaPot != null) {
                 if (plantEntry.terracottaPot == true) {
                     binding.yesTerracottaRadioButton.isChecked = true
                 } else {
@@ -505,11 +558,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         CoroutineScope(Dispatchers.IO).launch {
             userRef.child("plants").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position >=0 && position < snapshot.children.toList().size) {
-                        val plantSnapshot =  snapshot.children.toList()[position]
+                    if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
+                        val plantSnapshot = snapshot.children.toList()[position]
                         val plantId = plantSnapshot.key
-                        val plantEntry =  plantSnapshot.getValue(Plant::class.java)
-                        if(plantEntry != null){
+                        val plantEntry = plantSnapshot.getValue(Plant::class.java)
+                        if (plantEntry != null) {
                             setPlantEntryAttributes(plantEntry)
                         }
                         if (plantId != null) {
@@ -518,6 +571,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         }
                     }
                 }
+
                 override fun onCancelled(error: DatabaseError) {
                     Log.w("TAG", "Failed to read value.", error.toException())
                 }
@@ -548,15 +602,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
-        plantEntry.wateringFreq = if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
+        plantEntry.wateringFreq =
+            if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
 
-        val extension = MimeTypeMap.getSingleton().getMimeTypeFromExtension(contentResolver.getType(tempImgUri))
-        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(generateImageName(extension!!))
+        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
         firebaseStorageRef.putFile(tempImgUri).addOnFailureListener { exception ->
             Log.e(javaClass.simpleName, exception.message, exception)
         }
 
-        plantEntry.imageUri = tempImgUri.toString()
+        plantEntry.imageName = imageName
 
         plantEntry.adoptionDate = calendar.timeInMillis
         plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
@@ -597,27 +651,30 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         saveImgFlag = true
     }
 
-    private fun bottomNavigation(){
+    private fun bottomNavigation() {
         navigationView.selectedItemId = R.id.add_plant
-        navigationView.setOnNavigationItemSelectedListener{ item ->
+        navigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.dashboard_home -> {
                     val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 R.id.calender -> {
                     val intent = Intent(this, ScheduleActivity::class.java)
                     startActivity(intent)
 
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 R.id.reminder -> {
                     val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)
 
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 else -> false
             }
         }
@@ -626,7 +683,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val apiKey =  BuildConfig.PLANT_API_KEY
+                val apiKey = BuildConfig.PLANT_API_KEY
                 val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
 
                 with(url.openConnection() as HttpURLConnection) {

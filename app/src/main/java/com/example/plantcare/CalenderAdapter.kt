@@ -4,10 +4,12 @@ package com.example.plantcare
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
-import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.transition.AutoTransition
 import android.transition.TransitionManager
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
@@ -15,12 +17,21 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import com.google.android.material.circularreveal.cardview.CircularRevealCardView
 import com.google.android.material.textview.MaterialTextView
+import com.google.firebase.storage.FirebaseStorage
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class CalenderAdapter(private val context: Context,
                       private var plantEntryList: List<Plant>) : BaseAdapter() {
+
+    private lateinit var tempImgFile: File
+    private lateinit var tempImgUri: Uri
 
     override fun getCount(): Int {
         return plantEntryList.size
@@ -61,8 +72,60 @@ class CalenderAdapter(private val context: Context,
             viewHolder = view.tag as ViewHolder
         }
 
-        val imageUri = Uri.parse(plantEntryList[position].imageUri)
-        viewHolder.imageView!!.setImageURI(imageUri)
+        val imageName = plantEntryList[position].imageName
+
+        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName!!)
+
+        // Get the external files directory
+        val externalFilesDir = context.getExternalFilesDir(null)
+
+        if (externalFilesDir != null) {
+            // Create a File for the temp image
+            tempImgFile = File(externalFilesDir, imageName)
+
+            // Check if the file exists
+            if (!tempImgFile.exists()) {
+                // If the file doesn't exist, proceed with the download
+                firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                    // Successfully downloaded the byte array
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+
+                    // Save the Bitmap to the tempImgFile
+                    try {
+                        val stream = FileOutputStream(tempImgFile)
+                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                        stream.flush()
+                        stream.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+
+                    tempImgUri = FileProvider.getUriForFile(
+                        context,
+                        context.getString(R.string.com_example_plantcare),
+                        tempImgFile
+                    )
+
+                    viewHolder.imageView!!.setImageURI(tempImgUri)
+                }.addOnFailureListener { exception ->
+                    // Handle any errors that occurred during the download
+                    Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                }
+            } else {
+                // If the file already exists, use it directly
+                tempImgUri = FileProvider.getUriForFile(
+                    context,
+                    context.getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+            }
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
+        }
+
         viewHolder.textView!!.text = plantEntryList[position].plantName
 
         viewHolder.imageButton!!.setOnClickListener { view ->

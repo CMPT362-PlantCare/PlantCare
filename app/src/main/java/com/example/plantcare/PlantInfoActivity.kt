@@ -1,14 +1,15 @@
 package com.example.plantcare
 
 import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Button
-import android.widget.GridView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.net.toUri
+import androidx.core.content.FileProvider
 import androidx.lifecycle.lifecycleScope
 import com.example.plantcare.databinding.ActivityPlantInfoBinding
 import com.google.firebase.auth.FirebaseAuth
@@ -20,10 +21,14 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class PlantInfoActivity : AppCompatActivity() {
 
@@ -61,6 +66,7 @@ class PlantInfoActivity : AppCompatActivity() {
                 intent.putExtra(this.getString(R.string.position_key), position)
                 intent.putExtra(this.getString(R.string.plant_page_type), AddPlantActivity.PLANT_VIEW )
                 this.startActivity(intent)
+                finish()
                 return true
             }
 
@@ -94,9 +100,7 @@ class PlantInfoActivity : AppCompatActivity() {
                                     }
                                 }
                             }
-                            if (plantEntry.imageUri != null && plantEntry.imageUri != ""){
-                                binding.plantImageView.setImageURI(plantEntry.imageUri?.toUri())
-                            }
+                            setImage(plantEntry.imageName!!)
                         }
                     }
                 }
@@ -107,5 +111,50 @@ class PlantInfoActivity : AppCompatActivity() {
         }
     }
 
-
+    private fun setImage(imageName: String) {
+        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName!!)
+        val externalFilesDir = getExternalFilesDir(null)
+        if (externalFilesDir != null) {
+            var tempImgFile = File(externalFilesDir, imageName)
+            // Check if the file exists
+            if (!tempImgFile.exists()) {
+                // If the file doesn't exist, proceed with the download
+                firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                    // Successfully downloaded the byte array
+                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+                    // Save the Bitmap to the tempImgFile
+                    try {
+                        val stream = FileOutputStream(tempImgFile)
+                        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        stream.flush()
+                        stream.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                    var tempImgUri = FileProvider.getUriForFile(
+                        this,
+                        getString(R.string.com_example_plantcare),
+                        tempImgFile
+                    )
+                    binding.plantImageView!!.setImageURI(tempImgUri)
+                }.addOnFailureListener { exception ->
+                    // Errors that occurred during the download
+                    Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                }
+            } else {
+                // If the file already exists, use it directly
+                var tempImgUri = FileProvider.getUriForFile(
+                    this,
+                    getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+                binding.plantImageView!!.setImageURI(tempImgUri)
+            }
+        } else {
+            Toast.makeText(
+                this,
+                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
 }
