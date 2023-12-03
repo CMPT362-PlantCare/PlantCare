@@ -52,6 +52,11 @@
     <string name="tag">TAG</string>
     <string name="firebase_users_key">Users</string>
     <string name="error_downloading_image">Error Downloading Image: %1$s</string>
+    <string name="plants_firebase_key">plants</string>
+    <string name="data_prenual_key">data</string>
+    <string name="common_name_prenual_key">common_name</string>
+    <string name="id_prenual_key">id</string>
+    <string name="get">GET</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

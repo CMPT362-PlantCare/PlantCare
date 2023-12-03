@@ -3,7 +3,6 @@ package com.example.plantcare
 import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -22,6 +21,7 @@ import android.widget.ArrayAdapter
 import android.widget.DatePicker
 import android.widget.RadioButton
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -44,7 +44,6 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -71,11 +70,14 @@ private const val CHECKED_DH_KEY = "checked_dh_key"
 private const val NAME_KEY = "name_key"
 private const val SPECIES_KEY = "species_key"
 private const val POT_SIZE_KEY = "pot_size_key"
+private const val IMG_NAME_KEY = "img_name_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
 private const val BYTE_ARRAY_SIZE = 1024
+private const val ZERO = 0
 private const val FILE_COPY_OFFSET = 0
+private const val DOUBLE_ZERO = 0.0
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     companion object {
@@ -145,7 +147,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         cameraResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-
                 val bitmap = getBitmap(tempImgUri)
                 binding.imageView
                 if(bitmap != null){
@@ -160,7 +161,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     val selectedImageUri = result.data?.data
                     if (selectedImageUri != null) {
                         copyImage(selectedImageUri, tempImgUri)
-
                         val bitmap = getBitmap(tempImgUri)
                         if(bitmap != null) {
                             setPicture(addPlantViewModel, bitmap)
@@ -170,8 +170,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             }
 
         setUpSpeciesTextWatcher()
-
-        /* Bottom Navigator */
         bottomNavigation()
     }
 
@@ -189,7 +187,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         userRef.child("plants")
                             .addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onDataChange(snapshot: DataSnapshot) {
-                                    if (position >= 0 && position < snapshot.childrenCount) {
+                                    if (position >= ZERO && position < snapshot.childrenCount) {
                                         val plantSnapshot = snapshot.children.toList()[position]
                                         val plantId = plantSnapshot.key
                                         if (plantId != null) {
@@ -226,6 +224,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putBoolean(RENDERED_PLANT_ENTRY, isRenderedPlantEntry)
         outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
         outState.putString(TEMP_IMG_URI, tempImgUri.toString())
+        outState.putString(IMG_NAME_KEY, imageName)
     }
 
     private fun setUpViewModel() {
@@ -321,24 +320,33 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             // Create a File for the temp image
             tempImgFile = File(externalFilesDir, imageName)
 
-            // Convert the default image drawable to a Bitmap
-            val bitmap = defaultImageDrawable?.toBitmap()
+            if (!tempImgFile.exists()) {
+                // Convert the default image drawable to a Bitmap
+                val bitmap = defaultImageDrawable?.toBitmap()
 
-            // Save the Bitmap to the tempImgFile
-            try {
-                val stream = FileOutputStream(tempImgFile)
-                bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
-                stream.flush()
-                stream.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
+                // Save the Bitmap to the tempImgFile
+                try {
+                    val stream = FileOutputStream(tempImgFile)
+                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                    stream.flush()
+                    stream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+
+                tempImgUri = FileProvider.getUriForFile(
+                    this,
+                    getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
             }
-
-            tempImgUri = FileProvider.getUriForFile(
-                this,
-                getString(R.string.com_example_plantcare),
-                tempImgFile
-            )
+            else {
+                tempImgUri = FileProvider.getUriForFile(
+                    this,
+                    getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+            }
         } else {
             Toast.makeText(
                 this,
@@ -351,7 +359,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         CoroutineScope(Dispatchers.IO).launch {
             userRef.child("plants").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
+                    if (position != INT_VAL_UNKNOWN && position >= ZERO && position < snapshot.children.toList().size) {
                         val plantEntry =
                             snapshot.children.toList()[position].getValue(Plant::class.java)
                         if (plantEntry != null) {
@@ -381,11 +389,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 imageName = imgName!!
                 val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
                 val externalFilesDir = getExternalFilesDir(null)
-
                 if (externalFilesDir != null) {
                     // Create a File for the temp image
                     tempImgFile = File(externalFilesDir, imageName)
-
                     if (!tempImgFile.exists()) {
                         // If the file doesn't exist, proceed with the download
                         firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
@@ -398,7 +404,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             } catch (e: IOException) {
                                 e.printStackTrace()
                             }
-
                             tempImgUri = FileProvider.getUriForFile(
                                 this,
                                 getString(R.string.com_example_plantcare),
@@ -406,7 +411,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             )
                         }.addOnFailureListener { exception ->
                             // Handle any errors that occurred during the download
-                            Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                            Log.e(javaClass.simpleName, getString(R.string.error_downloading_image, exception.message), exception)
                         }
                     } else {
                         // If the file already exists, use it directly
@@ -468,6 +473,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
             isRenderedPlantEntry = savedInstanceState.getBoolean(RENDERED_PLANT_ENTRY, false)
             isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
+            imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
         }
     }
@@ -478,15 +484,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         calendar.set(Calendar.DAY_OF_MONTH, p3)
     }
 
-    private fun confirmAndCheckRadioButton(id: Int) {
-        if (id != INT_VAL_UNKNOWN) {
-            val radioButton = findViewById<RadioButton>(id)
-            if (radioButton != null) {
-                radioButton.isChecked = true
-            }
-        }
-    }
-
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         when (pageType) {
             PLANT_ADD -> menuInflater.inflate(R.menu.common_toolbar_menu, menu)
@@ -494,6 +491,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
 
         return true
+    }
+
+    private fun confirmAndCheckRadioButton(id: Int) {
+        if (id != INT_VAL_UNKNOWN) {
+            val radioButton = findViewById<RadioButton>(id)
+            if (radioButton != null) {
+                radioButton.isChecked = true
+            }
+        }
     }
 
     private fun requestPermissions() {
@@ -518,12 +524,21 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 this, arrayOf(
                     Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET
-                ), 0
+                ), ZERO
             )
         }
     }
 
     private fun initButtons() {
+        // Back Button
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                cleanUp()
+                finish()
+            }
+        })
+
+        // Photo Button
         binding.photoButton.setOnClickListener {
             val pictureDialog = PictureDialogFragment()
             pictureDialog.show(supportFragmentManager, "tag")
@@ -536,13 +551,19 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     }
                 }
         }
+
+        // DOB Button
         binding.dobButton.setOnClickListener {
             handleDateInput()
         }
+
+        // Cancel Button
         binding.cancelButton.setOnClickListener {
             finish()
+            cleanUp()
         }
 
+        // Add / Update Buttons
         if (pageType == PLANT_VIEW) {
             binding.addButton.text = getString(R.string.update)
             binding.addButton.setOnClickListener {
@@ -556,26 +577,38 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun cleanUp()
+    {
+        if(pageType == PLANT_ADD){
+            if (tempImgFile.exists()) {
+                tempImgFile.delete()
+            } else {
+                Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
+            }
+        }
+    }
+
     private fun updatePlant() {
         CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+            userRef.child(getString(R.string.plants_firebase_key)).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
+                    if (position != INT_VAL_UNKNOWN && position >= ZERO && position < snapshot.childrenCount) {
                         val plantSnapshot = snapshot.children.toList()[position]
                         val plantId = plantSnapshot.key
                         val plantEntry = plantSnapshot.getValue(Plant::class.java)
+
                         if (plantEntry != null) {
                             setPlantEntryAttributes(plantEntry)
                         }
+
                         if (plantId != null) {
-                            userRef.child("plants").child(plantId).setValue(plantEntry)
+                            userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry)
                             finish()
                         }
                     }
                 }
-
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }
@@ -584,10 +617,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun savePlantToDatabase() {
         val plantEntry = Plant()
         setPlantEntryAttributes(plantEntry)
-        val plantId = userRef.child("plants").push().key
+        val plantId = userRef.child(getString(R.string.plants_firebase_key)).push().key
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {
-                userRef.child("plants").child(plantId).setValue(plantEntry).await()
+                userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry).await()
                 finish()
             }
         }
@@ -597,7 +630,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
         plantEntry.plantSpeciesId = speciesId
-        var potSize = 0.0
+        var potSize = DOUBLE_ZERO
         val potSizeString = binding.sizeEditText.text.toString()
         if (potSizeString.isNotEmpty()) {
             potSize = potSizeString.toDouble()
@@ -605,7 +638,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
         plantEntry.wateringFreq =
-            if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
+            if (freq != "") (if (potSize != DOUBLE_ZERO) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
 
         storeImageToCloud()
 
@@ -685,8 +718,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
             return Bitmap.createBitmap(
                 bitmap,
-                0,
-                0,
+                ZERO,
+                ZERO,
                 bitmap.width,
                 bitmap.height,
                 matrix,
@@ -709,12 +742,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         navigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.dashboard_home -> {
+                    cleanUp()
                     val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
                     return@setOnNavigationItemSelectedListener true
                 }
 
                 R.id.calender -> {
+                    cleanUp()
                     val intent = Intent(this, ScheduleActivity::class.java)
                     startActivity(intent)
 
@@ -722,6 +757,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
 
                 R.id.reminder -> {
+                    cleanUp()
                     val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)
 
@@ -740,17 +776,17 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
 
                 with(url.openConnection() as HttpURLConnection) {
-                    requestMethod = "GET"
+                    requestMethod = getString(R.string.get)
                     inputStream.bufferedReader().use {
                         val speciesList = ArrayList<String>()
                         val idList = ArrayList<String>()
                         it.lines().forEach { line ->
                             var response = JSONObject(line)
-                            var valueArray = response.getJSONArray("data")
-                            for (t in 0 until valueArray.length()) {
-                                var name = valueArray.getJSONObject(t).getString("common_name")
+                            var valueArray = response.getJSONArray(getString(R.string.data_prenual_key))
+                            for (t in ZERO until valueArray.length()) {
+                                var name = valueArray.getJSONObject(t).getString(getString(R.string.common_name_prenual_key))
                                 speciesList.add(name)
-                                var id = valueArray.getJSONObject(t).getString("id")
+                                var id = valueArray.getJSONObject(t).getString(getString(R.string.id_prenual_key))
                                 idList.add(id)
                             }
                         }
