@@ -1,11 +1,14 @@
 package com.example.plantcare
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityLoginBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 
@@ -20,15 +23,24 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         firebaseAuth = Firebase.auth
 
+        handleBackgroundImageChanges()
         handleLogin()
         handleSignupPageRoute()
+    }
+
+    private fun handleBackgroundImageChanges() {
+        val orientation = resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.loginLayout.setBackgroundResource(R.drawable.login_bg_landscape)
+        } else {
+            binding.loginLayout.setBackgroundResource(R.drawable.login_bg)
+        }
     }
 
     private fun handleLogin() {
         binding.loginButton.setOnClickListener {
             val userEmail = binding.emailEditText.text.toString()
             val userPassword = binding.enterPasswordEditText.text.toString()
-
             if (userEmail.isNotEmpty() && userPassword.isNotEmpty()) {
                 firebaseAuth.signInWithEmailAndPassword(userEmail, userPassword)
                     .addOnCompleteListener { task ->
@@ -37,14 +49,46 @@ class LoginActivity : AppCompatActivity() {
                                 Intent(this, DashboardActivity::class.java)
                             startActivity(dashboardActivityIntent)
                             finish()
-
                         } else {
-                            Toast.makeText(this, task.exception.toString(), Toast.LENGTH_SHORT)
-                                .show()
+                            val errorMessage = task.exception?.message
+                            when {
+                                errorMessage?.contains(getString(R.string.email_address_is_badly_formatted)) == true -> {
+                                    // Invalid Email Format
+                                    Toast.makeText(
+                                        this,
+                                        getString(R.string.invalid_email_format_please_enter_a_valid_email_address),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                errorMessage?.contains(getString(R.string.auth_credential_is_incorrect)) == true -> {
+                                    // Invalid Password
+                                    Toast.makeText(
+                                        this,
+                                        getString(R.string.invalid_password_please_try_again),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                errorMessage?.contains(getString(R.string.unusual_activity)) == true -> {
+                                    // Limit Exceeded
+                                    Toast.makeText(
+                                        this,
+                                        getString(R.string.login_attempt_limit_exceeded_please_try_again_later),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                                else -> {
+                                    // Other exceptions
+                                    Toast.makeText(
+                                        this,
+                                        getString(R.string.login_failed_please_try_again_later),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
                         }
                     }
             } else {
-                Toast.makeText(this, "Please Fill All Fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }

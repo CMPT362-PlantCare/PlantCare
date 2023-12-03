@@ -10,6 +10,17 @@
     <string name="enter_your_password">Enter Your Password</string>
     <string name="login">Login</string>
     <string name="not_registered_yet_sign_up"><b>Not Registered Yet? <u>Sign Up</u></b></string>
+    <string name="login_attempt_limit_exceeded_please_try_again_later">Login Attempt Limit Exceeded. Please Try Again Later.</string>
+    <string name="invalid_password_please_try_again">Invalid Password. Please Try Again.</string>
+    <string name="invalid_email_format_please_enter_a_valid_email_address">Invalid email format. Please enter a valid email address.</string>
+    <string name="email_address_is_badly_formatted">email address is badly formatted</string>
+    <string name="auth_credential_is_incorrect">auth credential is incorrect</string>
+    <string name="unusual_activity">unusual activity</string>
+    <string name="login_failed_please_try_again_later">Login failed. Please try again later.</string>
+    <string name="please_fill_all_fields">Please Fill Out All Fields</string>
+    <string name="passwords_do_not_match">Passwords Do Not Match</string>
+    <string name="please_enter_a_valid_email">Please Enter A Valid Email.</string>
+    <string name="signup_failed_please_try_again_later">Signup failed. Please try again later.</string>
 
     <!-- DASHBOARD ACTIVITY -->
     <string name="greeting_message">Hello, %s</string>
@@ -61,6 +72,8 @@
     <string name="dd_mmm_yyyy">dd MMM yyyy</string>
     <string name="your_plants">Your Plants:</string>
     <string name="add_new_plant">Add New Plant</string>
+    <string name="weak_password">Weak Password.</string>
+    <string name="this_email_is_already_registered">This Email Is Already Registered</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>
