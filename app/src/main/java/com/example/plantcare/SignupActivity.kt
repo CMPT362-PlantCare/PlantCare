@@ -9,6 +9,8 @@ import androidx.core.view.marginTop
 import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
@@ -85,7 +87,24 @@ class SignupActivity : AppCompatActivity() {
                                 startActivity(loginActivityIntent)
                                 finish()
                             } else {
+                                println("xd: " + task.exception?.toString())
                                 when (task.exception) {
+                                    is FirebaseAuthUserCollisionException -> {
+                                        // Email Already In Use
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.this_email_is_already_registered),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    is FirebaseAuthWeakPasswordException -> {
+                                        // Weak Password
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.weak_password),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
                                     is FirebaseAuthInvalidCredentialsException -> {
                                         // Invalid Email Format
                                         Toast.makeText(
@@ -103,8 +122,6 @@ class SignupActivity : AppCompatActivity() {
                                         ).show()
                                     }
                                 }
-                                Toast.makeText(this, task.exception.toString(), Toast.LENGTH_SHORT)
-                                    .show()
                             }
                         }
                 } else {
