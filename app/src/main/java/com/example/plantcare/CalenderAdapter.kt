@@ -76,24 +76,16 @@ class CalenderAdapter(private val context: Context,
 
         val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName!!)
 
-        // Get the external files directory
         val externalFilesDir = context.getExternalFilesDir(null)
-
         if (externalFilesDir != null) {
-            // Create a File for the temp image
             tempImgFile = File(externalFilesDir, imageName)
-
-            // Check if the file exists
             if (!tempImgFile.exists()) {
                 // If the file doesn't exist, proceed with the download
                 firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
                     // Successfully downloaded the byte array
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-                    // Save the Bitmap to the tempImgFile
                     try {
                         val stream = FileOutputStream(tempImgFile)
-                        bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                        stream.write(bytes)
                         stream.flush()
                         stream.close()
                     } catch (e: IOException) {
@@ -105,11 +97,10 @@ class CalenderAdapter(private val context: Context,
                         context.getString(R.string.com_example_plantcare),
                         tempImgFile
                     )
-
                     viewHolder.imageView!!.setImageURI(tempImgUri)
                 }.addOnFailureListener { exception ->
                     // Handle any errors that occurred during the download
-                    Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                    Log.e(javaClass.simpleName, context.getString(R.string.error_downloading_image, exception.message), exception)
                 }
             } else {
                 // If the file already exists, use it directly
