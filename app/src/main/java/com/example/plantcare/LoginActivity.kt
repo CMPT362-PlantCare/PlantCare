@@ -1,6 +1,7 @@
 package com.example.plantcare
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -22,15 +23,24 @@ class LoginActivity : AppCompatActivity() {
         setContentView(binding.root)
         firebaseAuth = Firebase.auth
 
+        handleBackgroundImageChanges()
         handleLogin()
         handleSignupPageRoute()
+    }
+
+    private fun handleBackgroundImageChanges() {
+        val orientation = resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.loginLayout.setBackgroundResource(R.drawable.login_bg_landscape)
+        } else {
+            binding.loginLayout.setBackgroundResource(R.drawable.login_bg)
+        }
     }
 
     private fun handleLogin() {
         binding.loginButton.setOnClickListener {
             val userEmail = binding.emailEditText.text.toString()
             val userPassword = binding.enterPasswordEditText.text.toString()
-
             if (userEmail.isNotEmpty() && userPassword.isNotEmpty()) {
                 firebaseAuth.signInWithEmailAndPassword(userEmail, userPassword)
                     .addOnCompleteListener { task ->

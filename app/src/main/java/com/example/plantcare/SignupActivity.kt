@@ -1,9 +1,11 @@
 package com.example.plantcare
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.marginTop
 import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
@@ -25,9 +27,19 @@ class SignupActivity : AppCompatActivity() {
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
 
+        handleBackgroundImageChanges()
         handleUserAlreadyLoggedIn()
         handleSignup()
         handleSignupPageRoute()
+    }
+
+    private fun handleBackgroundImageChanges() {
+        val orientation = resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.signupLayout.setBackgroundResource(R.drawable.signup_bg_landscape)
+        } else {
+            binding.signupLayout.setBackgroundResource(R.drawable.signup_bg)
+        }
     }
 
     private fun handleUserAlreadyLoggedIn() {
