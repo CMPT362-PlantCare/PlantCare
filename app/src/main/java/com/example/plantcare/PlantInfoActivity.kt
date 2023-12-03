@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
+import android.text.TextUtils.split
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -29,6 +30,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 class PlantInfoActivity : AppCompatActivity() {
 
@@ -83,6 +87,26 @@ class PlantInfoActivity : AppCompatActivity() {
                         if(plantEntry != null){
                             supportActionBar?.title = plantEntry.plantName;
                             val specId = plantEntry.plantSpeciesId
+                            var infoText = "Plant species: ${split(
+                            plantEntry.plantSpecies,
+                            " "
+                            ).joinToString(" ") { it ->
+                                String
+                                it.replaceFirstChar {
+                                    if (it.isLowerCase()) it.titlecase(
+                                        Locale.ROOT
+                                    ) else it.toString()
+                                }
+                            }
+                        }"
+                            if(plantEntry.adoptionDate != null){
+                                val calendarTimeMillis = plantEntry.adoptionDate!!
+                                val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
+                                val formattedDate = dateFormat.format(Date(calendarTimeMillis))
+
+                                infoText += "\nDate of birth: $formattedDate"
+                            }
+                            binding.infoTextView.text = infoText
                             if (specId != null && specId != "") {
                                 lifecycleScope.launch {
                                     var defaultImg = Helpers.getDefaultImg(specId)
