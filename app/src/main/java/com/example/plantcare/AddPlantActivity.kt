@@ -506,10 +506,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
-    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
-        calendar.set(Calendar.YEAR, p1)
-        calendar.set(Calendar.MONTH, p2)
-        calendar.set(Calendar.DAY_OF_MONTH, p3)
+    override fun onDateSet(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+        calendar.set(Calendar.YEAR, year)
+        calendar.set(Calendar.MONTH, monthOfYear)
+        calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
+
+        val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
+        val formattedDate = dateFormat.format(calendar.time)
+        binding.dob.text = getString(R.string.dob_f_string, formattedDate)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
