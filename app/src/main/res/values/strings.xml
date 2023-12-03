@@ -2,8 +2,6 @@
     <string name="app_name">PlantCare</string>
 
     <!-- LOGIN & SIGN UP ACTIVITY -->
-
-    <string name="user_email_intent_tag">user-email-intent-tag</string>
     <string name="create_your_password">Create Your Password</string>
     <string name="re_enter_your_password">Re-Enter Your Password</string>
     <string name="sign_up">Sign Up</string>
@@ -58,6 +56,7 @@
     <string name="id_prenual_key">id</string>
     <string name="get">GET</string>
     <string name="error_deleting_image_from_firebase_storage">Error deleting image from Firebase Storage: %1$s</string>
+    <string name="invalid_autocomplete_position">Invalid Autocomplete Position</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

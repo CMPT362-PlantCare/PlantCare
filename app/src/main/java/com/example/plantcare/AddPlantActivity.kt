@@ -247,11 +247,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun setUpSpeciesTextWatcher() {
         binding.speciesAutocomplete.onItemClickListener =
-            OnItemClickListener { parent, arg1, pos, id ->
+            OnItemClickListener { _, _, pos, _ ->
                 if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
-                    speciesId = addPlantViewModel.id.value?.get(pos) ?: ""
+                    speciesId = addPlantViewModel.id.value?.get(pos) ?: EMPTY_STRING
                 } else {
-                    println("invalid autocomplete position")
+                    println(getString(R.string.invalid_autocomplete_position))
                 }
             }
 
@@ -299,7 +299,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                                         )
                                     }.await()
                                 }
-                                
+
                                 // Delete image from local file system
                                 deleteImage()
 

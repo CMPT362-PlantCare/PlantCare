@@ -35,10 +35,6 @@ class LoginActivity : AppCompatActivity() {
                         if (task.isSuccessful) {
                             val dashboardActivityIntent =
                                 Intent(this, DashboardActivity::class.java)
-                            dashboardActivityIntent.putExtra(
-                                getString(R.string.user_email_intent_tag),
-                                userEmail
-                            )
                             startActivity(dashboardActivityIntent)
                             finish()
 
