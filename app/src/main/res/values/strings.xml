@@ -57,6 +57,7 @@
     <string name="common_name_prenual_key">common_name</string>
     <string name="id_prenual_key">id</string>
     <string name="get">GET</string>
+    <string name="error_deleting_image_from_firebase_storage">Error deleting image from Firebase Storage: %1$s</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

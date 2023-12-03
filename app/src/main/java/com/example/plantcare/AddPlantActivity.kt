@@ -43,7 +43,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -113,7 +113,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
-        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
+        userRef = firebaseDatabase.reference.child(getString(R.string.firebase_users_key)).child(firebaseAuth.currentUser?.uid!!)
 
         binding = ActivityAddplantBinding.inflate(layoutInflater)
 
@@ -182,31 +182,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
         return when (item.itemId) {
             R.id.action_delete -> {
-                if (position != DEFAULT_POSITION) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        userRef.child("plants")
-                            .addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onDataChange(snapshot: DataSnapshot) {
-                                    if (position >= ZERO && position < snapshot.childrenCount) {
-                                        val plantSnapshot = snapshot.children.toList()[position]
-                                        val plantId = plantSnapshot.key
-                                        if (plantId != null) {
-                                            userRef.child("plants").child(plantId).removeValue()
-                                            finish()
-                                        }
-                                    }
-                                }
-                                override fun onCancelled(error: DatabaseError) {
-                                    Log.w("TAG", "Failed to read value.", error.toException())
-                                }
-                            })
-                    }
-
-                    Toast.makeText(
-                        this,
-                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
-                    ).show()
-                }
+                deletePlant(position)
                 return true
             }
 
@@ -300,6 +276,59 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    private fun deletePlant(position: Int) {
+        if (position != DEFAULT_POSITION) {
+            userRef.child(getString(R.string.plants_firebase_key))
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (position >= ZERO && position < snapshot.childrenCount) {
+                            val plantSnapshot = snapshot.children.toList()[position]
+                            val plantId = plantSnapshot.key
+                            if (plantId != null) {
+                                // Delete image from Firebase Storage
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val firebaseStorageRef =
+                                        Firebase.storage.reference.child(imageName)
+                                    firebaseStorageRef.delete().addOnFailureListener { exception ->
+                                        Log.e(
+                                            javaClass.simpleName,
+                                            getString(
+                                                R.string.error_deleting_image_from_firebase_storage,
+                                                exception.message
+                                            ), exception
+                                        )
+                                    }.await()
+                                }
+                                
+                                // Delete image from local file system
+                                deleteImage()
+
+                                // Delete plant
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    userRef.child(getString(R.string.plants_firebase_key))
+                                        .child(plantId).removeValue().await()
+                                }
+                                finish()
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.w(
+                            getString(R.string.tag),
+                            getString(R.string.failed_to_read_value),
+                            error.toException()
+                        )
+                    }
+                })
+
+            Toast.makeText(
+                this,
+                getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private fun setUpTempImage() {
         // Load the default image drawable
         val defaultImageDrawable =
@@ -387,10 +416,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             if (plantEntry.imageName != null) {
                 val imgName = plantEntry.imageName
                 imageName = imgName!!
-                val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
+                val firebaseStorageRef = Firebase.storage.reference.child(imageName)
                 val externalFilesDir = getExternalFilesDir(null)
                 if (externalFilesDir != null) {
-                    // Create a File for the temp image
                     tempImgFile = File(externalFilesDir, imageName)
                     if (!tempImgFile.exists()) {
                         // If the file doesn't exist, proceed with the download
@@ -580,11 +608,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun cleanUp()
     {
         if(pageType == PLANT_ADD){
-            if (tempImgFile.exists()) {
-                tempImgFile.delete()
-            } else {
-                Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
-            }
+            deleteImage()
+        }
+    }
+
+    private fun deleteImage() {
+        if (tempImgFile.exists()) {
+            tempImgFile.delete()
+        } else {
+            Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
         }
     }
 
@@ -651,7 +683,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun storeImageToCloud() {
         CoroutineScope(Dispatchers.IO).launch {
-            val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
+            val firebaseStorageRef = Firebase.storage.reference.child(imageName)
 
             try {
                 firebaseStorageRef.putFile(tempImgUri)

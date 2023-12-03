@@ -13,7 +13,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.FileProvider
-import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -64,7 +65,7 @@ class GridItemAdapter(private val context: Context,
     }
 
     private fun setImage(imageName: String, viewHolder: ViewHolder) {
-        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName!!)
+        val firebaseStorageRef = Firebase.storage.reference.child(imageName!!)
         val externalFilesDir = context.getExternalFilesDir(null)
         if (externalFilesDir != null) {
             var tempImgFile = File(externalFilesDir, imageName)

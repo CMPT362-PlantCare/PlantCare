@@ -21,7 +21,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
-import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.ktx.storage
 import com.squareup.picasso.Picasso
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -114,7 +114,7 @@ class PlantInfoActivity : AppCompatActivity() {
     }
 
     private fun setImage(imageName: String) {
-        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName!!)
+        val firebaseStorageRef = Firebase.storage.reference.child(imageName!!)
         val externalFilesDir = getExternalFilesDir(null)
         if (externalFilesDir != null) {
             var tempImgFile = File(externalFilesDir, imageName)
@@ -123,11 +123,9 @@ class PlantInfoActivity : AppCompatActivity() {
                 // If the file doesn't exist, proceed with the download
                 firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
                     // Successfully downloaded the byte array
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    // Save the Bitmap to the tempImgFile
                     try {
                         val stream = FileOutputStream(tempImgFile)
-                        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        stream.write(bytes)
                         stream.flush()
                         stream.close()
                     } catch (e: IOException) {
