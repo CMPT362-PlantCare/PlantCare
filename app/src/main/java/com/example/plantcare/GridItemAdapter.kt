@@ -43,7 +43,7 @@ class GridItemAdapter(private val context: Context,
 
             viewHolder = ViewHolder()
             viewHolder.imageView = view!!.findViewById(R.id.imageView)
-            viewHolder.textView = view!!.findViewById(R.id.textView)
+            viewHolder.textView = view.findViewById(R.id.textView)
 
             view.tag = viewHolder
         }
@@ -73,11 +73,9 @@ class GridItemAdapter(private val context: Context,
                 // If the file doesn't exist, proceed with the download
                 firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
                     // Successfully downloaded the byte array
-                    val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-                    // Save the Bitmap to the tempImgFile
                     try {
                         val stream = FileOutputStream(tempImgFile)
-                        bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                        stream.write(bytes)
                         stream.flush()
                         stream.close()
                     } catch (e: IOException) {
@@ -91,7 +89,8 @@ class GridItemAdapter(private val context: Context,
                     viewHolder.imageView!!.setImageURI(tempImgUri)
                 }.addOnFailureListener { exception ->
                     // Errors that occurred during the download
-                    Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                    Log.e(javaClass.simpleName,
+                        context.getString(R.string.error_downloading_image, exception.message), exception)
                 }
             } else {
                 // If the file already exists, use it directly

@@ -48,7 +48,7 @@ class PlantInfoActivity : AppCompatActivity() {
 
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
-        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
+        userRef = firebaseDatabase.reference.child(getString(R.string.firebase_users_key)).child(firebaseAuth.currentUser?.uid!!)
 
         position = intent.getIntExtra(getString(R.string.position_key), 0)
         getPlantInfo()
@@ -100,12 +100,14 @@ class PlantInfoActivity : AppCompatActivity() {
                                     }
                                 }
                             }
-                            setImage(plantEntry.imageName!!)
+                            if(plantEntry.imageName != null){
+                                setImage(plantEntry.imageName!!)
+                            }
                         }
                     }
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }
@@ -139,7 +141,8 @@ class PlantInfoActivity : AppCompatActivity() {
                     binding.plantImageView!!.setImageURI(tempImgUri)
                 }.addOnFailureListener { exception ->
                     // Errors that occurred during the download
-                    Log.e(javaClass.simpleName, "Error downloading image: ${exception.message}", exception)
+                    Log.e(javaClass.simpleName,
+                        getString(R.string.error_downloading_image, exception.message), exception)
                 }
             } else {
                 // If the file already exists, use it directly

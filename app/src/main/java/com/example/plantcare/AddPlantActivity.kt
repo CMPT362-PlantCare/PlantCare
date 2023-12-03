@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -43,6 +44,7 @@ import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageMetadata
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -144,9 +146,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
 
-                val bitmap = getBitmap(this, tempImgUri)
+                val bitmap = getBitmap(tempImgUri)
                 binding.imageView
-                setPicture(addPlantViewModel, bitmap)
+                if(bitmap != null){
+                    setPicture(addPlantViewModel, bitmap)
+                }
             }
         }
 
@@ -157,8 +161,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     if (selectedImageUri != null) {
                         copyImage(selectedImageUri, tempImgUri)
 
-                        val bitmap = getBitmap(this, tempImgUri)
-                        setPicture(addPlantViewModel, bitmap)
+                        val bitmap = getBitmap(tempImgUri)
+                        if(bitmap != null) {
+                            setPicture(addPlantViewModel, bitmap)
+                        }
                     }
                 }
             }
@@ -380,17 +386,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     // Create a File for the temp image
                     tempImgFile = File(externalFilesDir, imageName)
 
-                    // Check if the file exists
                     if (!tempImgFile.exists()) {
                         // If the file doesn't exist, proceed with the download
                         firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
                             // Successfully downloaded the byte array
-                            val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
-
-                            // Save the Bitmap to the tempImgFile
                             try {
                                 val stream = FileOutputStream(tempImgFile)
-                                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
+                                stream.write(bytes)
                                 stream.flush()
                                 stream.close()
                             } catch (e: IOException) {
@@ -605,16 +607,29 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.wateringFreq =
             if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
 
-        val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
-        firebaseStorageRef.putFile(tempImgUri).addOnFailureListener { exception ->
-            Log.e(javaClass.simpleName, exception.message, exception)
-        }
+        storeImageToCloud()
 
         plantEntry.imageName = imageName
 
         plantEntry.adoptionDate = calendar.timeInMillis
         plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
         plantEntry.drainageHoles = binding.yesDrainageRadioButton.isChecked
+    }
+
+    private fun storeImageToCloud() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val firebaseStorageRef = FirebaseStorage.getInstance().reference.child(imageName)
+
+            try {
+                firebaseStorageRef.putFile(tempImgUri)
+                    .addOnFailureListener { exception ->
+                        Log.e(javaClass.simpleName, exception.message, exception)
+                    }
+                    .await()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun openCamera() {
@@ -639,10 +654,48 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         galleryResult.launch(intent)
     }
 
-    private fun getBitmap(context: Context, imgUri: Uri): Bitmap {
-        val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(imgUri))
-        val matrix = Matrix()
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    private fun getBitmap(imgUri: Uri): Bitmap? {
+        try {
+            val inputStream = contentResolver.openInputStream(imgUri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+
+            val exif = ExifInterface(imgUri.path.toString())
+
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED
+            )
+
+            val matrix = Matrix()
+
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> {
+                    matrix.setRotate(90f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_180 -> {
+                    matrix.setRotate(180f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_270 -> {
+                    matrix.setRotate(270f)
+                }
+                else -> {
+                    return bitmap // No need to rotate
+                }
+            }
+
+            return Bitmap.createBitmap(
+                bitmap,
+                0,
+                0,
+                bitmap.width,
+                bitmap.height,
+                matrix,
+                true
+            )
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return null
+        }
     }
 
     private fun setPicture(viewModel: AddPlantViewModel, bitmap: Bitmap) {
