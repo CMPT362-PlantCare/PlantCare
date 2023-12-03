@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
@@ -72,15 +73,34 @@ class SignupActivity : AppCompatActivity() {
                                 startActivity(loginActivityIntent)
                                 finish()
                             } else {
+                                when (task.exception) {
+                                    is FirebaseAuthInvalidCredentialsException -> {
+                                        // Invalid Email Format
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.please_enter_a_valid_email),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    else -> {
+                                        // Other exceptions
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.signup_failed_please_try_again_later),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                                 Toast.makeText(this, task.exception.toString(), Toast.LENGTH_SHORT)
                                     .show()
                             }
                         }
                 } else {
-                    Toast.makeText(this, "Passwords Do Not Match", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,
+                        getString(R.string.passwords_do_not_match), Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Please Out Fill All Fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }

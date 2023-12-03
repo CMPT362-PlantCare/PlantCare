@@ -40,9 +40,7 @@ class LoginActivity : AppCompatActivity() {
                             startActivity(dashboardActivityIntent)
                             finish()
                         } else {
-                            // Handle specific exceptions
                             val errorMessage = task.exception?.message
-                            println("xd: " + task.exception?.toString() + errorMessage)
                             when {
                                 errorMessage?.contains(getString(R.string.email_address_is_badly_formatted)) == true -> {
                                     // Invalid Email Format
