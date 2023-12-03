@@ -60,6 +60,7 @@
     <string name="dob_f_string">DOB: %1$s</string>
     <string name="dd_mmm_yyyy">dd MMM yyyy</string>
     <string name="your_plants">Your Plants:</string>
+    <string name="add_new_plant">Add New Plant</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>

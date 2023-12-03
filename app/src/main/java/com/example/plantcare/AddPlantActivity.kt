@@ -68,12 +68,14 @@ private const val DEFAULT_POSITION = -1
 private const val CHECKED_TP_KEY = "checked_tp_key"
 private const val CHECKED_DH_KEY = "checked_dh_key"
 private const val NAME_KEY = "name_key"
+private const val CALENDAR_TIME_MILLIS = "calendar_time_millis"
 private const val SPECIES_KEY = "species_key"
 private const val POT_SIZE_KEY = "pot_size_key"
 private const val IMG_NAME_KEY = "img_name_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
+private const val DOB_TEXT_KEY = "dob_text_key"
 private const val BYTE_ARRAY_SIZE = 1024
 private const val ZERO = 0
 private const val FILE_COPY_OFFSET = 0
@@ -96,7 +98,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
     private lateinit var navigationView: BottomNavigationView
-    private var speciesId = ""
+    private var speciesId = EMPTY_STRING
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
@@ -107,6 +109,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private var saveImgFlag: Boolean = false
     private var isImageNameSet: Boolean = false
     private var imageName: String = EMPTY_STRING
+    private var calendarTimeMillis: Long = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,6 +134,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         when (pageType) {
             PLANT_VIEW -> {
+                supportActionBar?.title = getString(R.string.edit_plant)
                 if (!isRenderedPlantEntry) {
                     getPlantEntryAndPopulateFields()
                     isRenderedPlantEntry = true
@@ -139,7 +143,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
             }
 
-            PLANT_ADD -> setUpTempImage()
+            PLANT_ADD -> {
+                supportActionBar?.title = getString(R.string.add_new_plant)
+                setUpTempImage()
+            }
         }
 
         setUpViewModel()
@@ -201,6 +208,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
         outState.putString(TEMP_IMG_URI, tempImgUri.toString())
         outState.putString(IMG_NAME_KEY, imageName)
+        outState.putString(DOB_TEXT_KEY, binding.dob.text.toString())
+        outState.putLong(CALENDAR_TIME_MILLIS, calendarTimeMillis)
     }
 
     private fun setUpViewModel() {
@@ -393,13 +402,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             snapshot.children.toList()[position].getValue(Plant::class.java)
                         if (plantEntry != null) {
                             populateFields(plantEntry)
-                            speciesId = plantEntry.plantSpeciesId ?: ""
+                            speciesId = plantEntry.plantSpeciesId ?: EMPTY_STRING
                         }
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }
@@ -480,6 +489,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     binding.noTerracottaRadioButton.isChecked = true
                 }
             }
+
+            if(plantEntry.adoptionDate != null){
+                calendarTimeMillis = plantEntry.adoptionDate!!
+                val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
+                val formattedDate = dateFormat.format(Date(calendarTimeMillis))
+
+                val dobText = getString(R.string.dob_f_string, formattedDate)
+                binding.dob.text = dobText
+            }
         }
     }
 
@@ -494,15 +512,19 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             val name = savedInstanceState.getString(NAME_KEY, EMPTY_STRING)
             val species = savedInstanceState.getString(SPECIES_KEY, EMPTY_STRING)
             val potSize = savedInstanceState.getString(POT_SIZE_KEY, EMPTY_STRING)
+            val dobText = savedInstanceState.getString(DOB_TEXT_KEY, EMPTY_STRING)
 
             binding.nameEditText.setText(name)
             binding.speciesAutocomplete.setText(species)
             binding.sizeEditText.setText(potSize)
+            binding.dob.text = dobText
+
 
             isRenderedPlantEntry = savedInstanceState.getBoolean(RENDERED_PLANT_ENTRY, false)
             isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
             imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
+            calendarTimeMillis = savedInstanceState.getLong(CALENDAR_TIME_MILLIS, System.currentTimeMillis())
         }
     }
 
@@ -512,8 +534,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
 
         val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
-        val formattedDate = dateFormat.format(calendar.time)
-        binding.dob.text = getString(R.string.dob_f_string, formattedDate)
+        calendarTimeMillis = calendar.timeInMillis
+        val formattedDate = dateFormat.format(calendarTimeMillis)
+        val dobText = getString(R.string.dob_f_string, formattedDate)
+        binding.dob.text = dobText
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -674,13 +698,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
         plantEntry.wateringFreq =
-            if (freq != "") (if (potSize != DOUBLE_ZERO) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
+            if (freq != EMPTY_STRING) (if (potSize != DOUBLE_ZERO) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
 
         storeImageToCloud()
 
         plantEntry.imageName = imageName
 
-        plantEntry.adoptionDate = calendar.timeInMillis
+        plantEntry.adoptionDate = calendarTimeMillis
         plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
         plantEntry.drainageHoles = binding.yesDrainageRadioButton.isChecked
     }
@@ -708,12 +732,19 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun handleDateInput() {
-        val datePickerDialog = DatePickerDialog(
+        var datePickerDialog: DatePickerDialog
+
+        val selectedDate = Date(calendarTimeMillis)
+        val calendar = Calendar.getInstance()
+        calendar.time = selectedDate
+
+        datePickerDialog = DatePickerDialog(
             this, this,
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+
         datePickerDialog.show()
     }
 
