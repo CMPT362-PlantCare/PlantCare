@@ -33,12 +33,7 @@ class SignupActivity : AppCompatActivity() {
         if (firebaseAuth.currentUser != null) {
             firebaseAuth.currentUser.let { user ->
                 if (user != null) {
-                    val userEmail = user.email.toString()
                     val dashboardActivityIntent = Intent(this, DashboardActivity::class.java)
-                    dashboardActivityIntent.putExtra(
-                        getString(R.string.user_email_intent_tag),
-                        userEmail
-                    )
                     startActivity(dashboardActivityIntent)
                     finish()
                 }
