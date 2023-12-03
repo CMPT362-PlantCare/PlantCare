@@ -24,4 +24,6 @@ data class Plant(
     var imageName: String? = null,
 
     var wateringFreq: Int = 10,
+
+    var lastWateredDate: Long? = null,
 )
