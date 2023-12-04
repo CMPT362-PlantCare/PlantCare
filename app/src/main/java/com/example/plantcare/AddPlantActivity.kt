@@ -216,10 +216,12 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putBoolean(RENDERED_PLANT_ENTRY, isRenderedPlantEntry)
         outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
         outState.putString(TEMP_IMG_URI, tempImgUri.toString())
-        outState.putString(SAVED_IMG_URI, copyImgUri.toString())
         outState.putString(IMG_NAME_KEY, imageName)
         outState.putString(DOB_TEXT_KEY, binding.dob.text.toString())
         outState.putLong(CALENDAR_TIME_MILLIS, calendarTimeMillis)
+        if(pageType == PLANT_VIEW){
+            outState.putString(SAVED_IMG_URI, copyImgUri.toString())
+        }
     }
 
     private fun setUpViewModel() {
@@ -474,7 +476,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         copyImgFile
                     )
                     copyImage(tempImgUri, copyImgUri)
-                    println("xd: got here!!!")
                 } else {
                     Toast.makeText(
                         this,
@@ -541,8 +542,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
             imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
-            copyImgUri = Uri.parse(savedInstanceState.getString(SAVED_IMG_URI, EMPTY_STRING))
             calendarTimeMillis = savedInstanceState.getLong(CALENDAR_TIME_MILLIS, System.currentTimeMillis())
+            if(pageType == PLANT_VIEW) {
+                copyImgUri = Uri.parse(savedInstanceState.getString(SAVED_IMG_URI, EMPTY_STRING))
+            }
         }
     }
 
@@ -607,6 +610,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         // Back Button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if(pageType == PLANT_VIEW) {
+                    if(copyImgUri != tempImgUri) {
+                        copyImage(copyImgUri, tempImgUri)
+                    }
+                }
                 cleanUp()
                 finish()
             }
@@ -660,6 +668,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     {
         if(pageType == PLANT_ADD){
             deleteImage()
+        }
+        else {
+            deleteImageCopy()
         }
     }
 
@@ -855,6 +866,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         navigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.dashboard_home -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
@@ -862,6 +878,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
 
                 R.id.calender -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, ScheduleActivity::class.java)
                     startActivity(intent)
@@ -870,6 +891,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
 
                 R.id.reminder -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)

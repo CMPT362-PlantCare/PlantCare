@@ -89,5 +89,6 @@
     <string name="plant_info_watering_details">\n\nBased on the provided attributes, we recommend watering %1$s every %2$d days.</string>
     <string name="plant_info_sunlight">Sunlight:\n</string>
     <string name="plant_info_pruning">Pruning:\n</string>
+    <string name="complete">Complete</string>
 
 </resources>
