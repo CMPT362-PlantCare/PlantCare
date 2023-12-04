@@ -77,6 +77,7 @@ private const val IMG_NAME_KEY = "img_name_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
+private const val SAVED_IMG_URI = "saved_img_uri_key"
 private const val DOB_TEXT_KEY = "dob_text_key"
 private const val BYTE_ARRAY_SIZE = 1024
 private const val ZERO = 0
@@ -99,7 +100,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var cameraResult: ActivityResultLauncher<Intent>
     private lateinit var galleryResult: ActivityResultLauncher<Intent>
     private lateinit var tempImgFile: File
+    private lateinit var copyImgFile: File
     private lateinit var tempImgUri: Uri
+    private lateinit var copyImgUri: Uri
     private lateinit var imgToSave: Bitmap
     private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
@@ -213,6 +216,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putBoolean(RENDERED_PLANT_ENTRY, isRenderedPlantEntry)
         outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
         outState.putString(TEMP_IMG_URI, tempImgUri.toString())
+        outState.putString(SAVED_IMG_URI, copyImgUri.toString())
         outState.putString(IMG_NAME_KEY, imageName)
         outState.putString(DOB_TEXT_KEY, binding.dob.text.toString())
         outState.putLong(CALENDAR_TIME_MILLIS, calendarTimeMillis)
@@ -363,7 +367,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if (externalFilesDir != null) {
             // Create a File for the temp image
             tempImgFile = File(externalFilesDir, imageName)
-
             if (!tempImgFile.exists()) {
                 // Convert the default image drawable to a Bitmap
                 val bitmap = defaultImageDrawable?.toBitmap()
@@ -464,6 +467,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             tempImgFile
                         )
                     }
+                    copyImgFile = File(externalFilesDir, "copy_" + imageName)
+                    copyImgUri = FileProvider.getUriForFile(
+                        this,
+                        getString(R.string.com_example_plantcare),
+                        copyImgFile
+                    )
+                    copyImage(tempImgUri, copyImgUri)
+                    println("xd: got here!!!")
                 } else {
                     Toast.makeText(
                         this,
@@ -530,6 +541,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
             imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
+            copyImgUri = Uri.parse(savedInstanceState.getString(SAVED_IMG_URI, EMPTY_STRING))
             calendarTimeMillis = savedInstanceState.getLong(CALENDAR_TIME_MILLIS, System.currentTimeMillis())
         }
     }
@@ -621,6 +633,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         // Cancel Button
         binding.cancelButton.setOnClickListener {
+            if(pageType == PLANT_VIEW) {
+                if(copyImgUri != tempImgUri) {
+                    copyImage(copyImgUri, tempImgUri)
+                }
+            }
             finish()
             cleanUp()
         }
@@ -654,6 +671,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun deleteImageCopy() {
+        if(copyImgFile.exists()){
+            copyImgFile.delete()
+        }else {
+            Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
+        }
+    }
+
     private fun updatePlant() {
         CoroutineScope(Dispatchers.IO).launch {
             userRef.child(getString(R.string.plants_firebase_key)).addListenerForSingleValueEvent(object : ValueEventListener {
@@ -669,6 +694,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
                         if (plantId != null) {
                             userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry)
+                            deleteImageCopy()
                             finish()
                         }
                     }
