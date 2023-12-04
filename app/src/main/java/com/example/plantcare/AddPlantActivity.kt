@@ -697,7 +697,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if (plantEntry.potSize != null && plantEntry.potSize != DOUBLE_ZERO) ret *= plantEntry.potSize!!.toInt().div(
             POT_SIZE_NORMALIZATION_FACTOR
         )
-        if (plantEntry.terracottaPot == true){
+        if (plantEntry.terracottaPot == false){
             ret = (ret * TERRACOTTA_FACTOR).toInt()
         }
         if (plantEntry.drainageHoles == false){
