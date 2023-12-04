@@ -128,6 +128,14 @@ class ScheduleActivity : AppCompatActivity() {
                     plantEntryList.clear() // Clear the existing list
                     plantEntryList.addAll(newPlantEntryList)
                     updateWateringSchedule(plantEntryList)
+                    if(wateringSchedule.containsKey(today)) {
+                        selectDate(today)
+                        val plantsToWater = wateringSchedule[today]
+                        Log.d("WateringEventsListAdapter", "Plants to water: ${plantsToWater?.map { it.plantName }}")
+                        plantsToWater?.let {
+                            updateEventList(it, today)
+                        }
+                    }
                     runOnUiThread {
                         // Update the calendar view
                         binding.calendarView.notifyCalendarChanged()
@@ -138,6 +146,11 @@ class ScheduleActivity : AppCompatActivity() {
                 }
             })
         }
+    }
+
+    private fun updateEventList(it: MutableList<Plant>, today: LocalDate?) {
+        wateringEventsListAdapter.replace(it, today!!)
+        wateringEventsListAdapter.notifyDataSetChanged()
     }
 
     private fun updateWateringSchedule(plantList: List<Plant>) {
@@ -180,6 +193,7 @@ class ScheduleActivity : AppCompatActivity() {
             val textView = CalendarDayLayoutBinding.bind(view).calendarDayText
             val dotView: View = CalendarDayLayoutBinding.bind(view).greenDot
             lateinit var day: CalendarDay
+
             init {
                 view.setOnClickListener {
                     if(day.position == DayPosition.MonthDate && wateringSchedule.containsKey(day.date)) {
