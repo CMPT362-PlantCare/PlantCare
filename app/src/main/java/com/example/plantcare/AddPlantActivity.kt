@@ -686,6 +686,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun calculateWaterFreq(freq: String, plantEntry: Plant) : Int {
+        var ret = if (freq == EMPTY_STRING) 7 else freq.toInt()
+        if (plantEntry.potSize != null && plantEntry.potSize != DOUBLE_ZERO) ret *= plantEntry.potSize!!.toInt().div(5)
+        if (plantEntry.terracottaPot == true) ret *= 2
+        if (plantEntry.drainageHoles == false) ret *= 2
+        return ret
+    }
+
     private fun setPlantEntryAttributes(plantEntry: Plant) {
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
@@ -697,8 +705,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
-        plantEntry.wateringFreq =
-            if (freq != EMPTY_STRING) (if (potSize != DOUBLE_ZERO) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
+        plantEntry.wateringFreq = calculateWaterFreq(freq, plantEntry)
 
         storeImageToCloud()
 
