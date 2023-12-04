@@ -65,6 +65,8 @@ import java.util.Locale
 private const val EMPTY_STRING = ""
 private const val INT_VAL_UNKNOWN = -1
 private const val DEFAULT_POSITION = -1
+private const val DEFAULT_INDEX = 1
+private const val DEFAULT_THRESHOLD = 1
 private const val CHECKED_TP_KEY = "checked_tp_key"
 private const val CHECKED_DH_KEY = "checked_dh_key"
 private const val NAME_KEY = "name_key"
@@ -80,6 +82,10 @@ private const val BYTE_ARRAY_SIZE = 1024
 private const val ZERO = 0
 private const val FILE_COPY_OFFSET = 0
 private const val DOUBLE_ZERO = 0.0
+private const val DEFAULT_FREQUENCY = 7
+private const val TERRACOTTA_FACTOR = 0.5
+private const val DRAINAGE_HOLE_FACTOR = 2
+private const val POT_SIZE_NORMALIZATION_FACTOR = 5
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     companion object {
@@ -182,7 +188,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     override fun onResume() {
         super.onResume()
-        navigationView.menu.getItem(1).isChecked = true;
+        navigationView.menu.getItem(DEFAULT_INDEX).isChecked = true;
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -213,7 +219,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun setUpViewModel() {
-        binding.speciesAutocomplete.threshold = 1
+        binding.speciesAutocomplete.threshold = DEFAULT_THRESHOLD
 
         addPlantViewModel = ViewModelProvider(this)[AddPlantViewModel::class.java]
         addPlantViewModel.image.observe(this) {
@@ -395,7 +401,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun getPlantEntryAndPopulateFields() {
         CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+            userRef.child(getString(R.string.plants_firebase_key)).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (position != INT_VAL_UNKNOWN && position >= ZERO && position < snapshot.children.toList().size) {
                         val plantEntry =
@@ -597,11 +603,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         // Photo Button
         binding.photoButton.setOnClickListener {
             val pictureDialog = PictureDialogFragment()
-            pictureDialog.show(supportFragmentManager, "tag")
+            pictureDialog.show(supportFragmentManager, getString(R.string.tag))
 
             supportFragmentManager
-                .setFragmentResultListener("requestKey", this) { requestKey, bundle ->
-                    when (bundle.getInt("bundleKey")) {
+                .setFragmentResultListener(getString(R.string.request_key_name), this) { _, bundle ->
+                    when (bundle.getInt(getString(R.string.bundle_key_name))) {
                         PictureDialogFragment.OPEN_CAMERA -> openCamera()
                         PictureDialogFragment.OPEN_GALLERY -> openGallery()
                     }
@@ -687,10 +693,16 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun calculateWaterFreq(freq: String, plantEntry: Plant) : Int {
-        var ret = if (freq == EMPTY_STRING) 7 else freq.toInt()
-        if (plantEntry.potSize != null && plantEntry.potSize != DOUBLE_ZERO) ret *= plantEntry.potSize!!.toInt().div(5)
-        if (plantEntry.terracottaPot == true) ret *= 2
-        if (plantEntry.drainageHoles == false) ret *= 2
+        var ret = if (freq == EMPTY_STRING) DEFAULT_FREQUENCY else freq.toInt()
+        if (plantEntry.potSize != null && plantEntry.potSize != DOUBLE_ZERO) ret *= plantEntry.potSize!!.toInt().div(
+            POT_SIZE_NORMALIZATION_FACTOR
+        )
+        if (plantEntry.terracottaPot == true){
+            ret = (ret * TERRACOTTA_FACTOR).toInt()
+        }
+        if (plantEntry.drainageHoles == false){
+            ret *= DRAINAGE_HOLE_FACTOR
+        }
         return ret
     }
 
@@ -739,7 +751,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun handleDateInput() {
-        var datePickerDialog: DatePickerDialog
+        val datePickerDialog: DatePickerDialog
 
         val selectedDate = Date(calendarTimeMillis)
         val calendar = Calendar.getInstance()
@@ -855,12 +867,12 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         val speciesList = ArrayList<String>()
                         val idList = ArrayList<String>()
                         it.lines().forEach { line ->
-                            var response = JSONObject(line)
-                            var valueArray = response.getJSONArray(getString(R.string.data_prenual_key))
+                            val response = JSONObject(line)
+                            val valueArray = response.getJSONArray(getString(R.string.data_prenual_key))
                             for (t in ZERO until valueArray.length()) {
-                                var name = valueArray.getJSONObject(t).getString(getString(R.string.common_name_prenual_key))
+                                val name = valueArray.getJSONObject(t).getString(getString(R.string.common_name_prenual_key))
                                 speciesList.add(name)
-                                var id = valueArray.getJSONObject(t).getString(getString(R.string.id_prenual_key))
+                                val id = valueArray.getJSONObject(t).getString(getString(R.string.id_prenual_key))
                                 idList.add(id)
                             }
                         }

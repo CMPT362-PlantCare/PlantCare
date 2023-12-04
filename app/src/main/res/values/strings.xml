@@ -74,6 +74,8 @@
     <string name="add_new_plant">Add New Plant</string>
     <string name="weak_password">Weak Password.</string>
     <string name="this_email_is_already_registered">This Email Is Already Registered</string>
+    <string name="request_key_name">requestKey</string>
+    <string name="bundle_key_name">bundleKey</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>
