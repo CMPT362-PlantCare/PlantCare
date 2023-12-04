@@ -1,11 +1,16 @@
 package com.example.plantcare
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.marginTop
 import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
+import com.google.firebase.auth.FirebaseAuthWeakPasswordException
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ktx.database
@@ -24,21 +29,26 @@ class SignupActivity : AppCompatActivity() {
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
 
+        handleBackgroundImageChanges()
         handleUserAlreadyLoggedIn()
         handleSignup()
         handleSignupPageRoute()
+    }
+
+    private fun handleBackgroundImageChanges() {
+        val orientation = resources.configuration.orientation
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            binding.signupLayout.setBackgroundResource(R.drawable.signup_bg_landscape)
+        } else {
+            binding.signupLayout.setBackgroundResource(R.drawable.signup_bg)
+        }
     }
 
     private fun handleUserAlreadyLoggedIn() {
         if (firebaseAuth.currentUser != null) {
             firebaseAuth.currentUser.let { user ->
                 if (user != null) {
-                    val userEmail = user.email.toString()
                     val dashboardActivityIntent = Intent(this, DashboardActivity::class.java)
-                    dashboardActivityIntent.putExtra(
-                        getString(R.string.user_email_intent_tag),
-                        userEmail
-                    )
                     startActivity(dashboardActivityIntent)
                     finish()
                 }
@@ -77,15 +87,49 @@ class SignupActivity : AppCompatActivity() {
                                 startActivity(loginActivityIntent)
                                 finish()
                             } else {
-                                Toast.makeText(this, task.exception.toString(), Toast.LENGTH_SHORT)
-                                    .show()
+                                println("xd: " + task.exception?.toString())
+                                when (task.exception) {
+                                    is FirebaseAuthUserCollisionException -> {
+                                        // Email Already In Use
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.this_email_is_already_registered),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    is FirebaseAuthWeakPasswordException -> {
+                                        // Weak Password
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.weak_password),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    is FirebaseAuthInvalidCredentialsException -> {
+                                        // Invalid Email Format
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.please_enter_a_valid_email),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                    else -> {
+                                        // Other exceptions
+                                        Toast.makeText(
+                                            this,
+                                            getString(R.string.signup_failed_please_try_again_later),
+                                            Toast.LENGTH_SHORT
+                                        ).show()
+                                    }
+                                }
                             }
                         }
                 } else {
-                    Toast.makeText(this, "Passwords Do Not Match", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this,
+                        getString(R.string.passwords_do_not_match), Toast.LENGTH_SHORT).show()
                 }
             } else {
-                Toast.makeText(this, "Please Out Fill All Fields", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, getString(R.string.please_fill_all_fields), Toast.LENGTH_SHORT).show()
             }
         }
     }

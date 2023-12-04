@@ -3,12 +3,21 @@ package com.example.plantcare
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.BaseAdapter
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.content.FileProvider
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 
 class GridItemAdapter(private val context: Context,
                       private var plantEntryList: List<Plant>) : BaseAdapter() {
@@ -35,7 +44,7 @@ class GridItemAdapter(private val context: Context,
 
             viewHolder = ViewHolder()
             viewHolder.imageView = view!!.findViewById(R.id.imageView)
-            viewHolder.textView = view!!.findViewById(R.id.textView)
+            viewHolder.textView = view.findViewById(R.id.textView)
 
             view.tag = viewHolder
         }
@@ -43,17 +52,9 @@ class GridItemAdapter(private val context: Context,
             viewHolder = view.tag as ViewHolder
         }
 
-        val plant = plantEntryList[position]
-        val imageUriString = plant.imageUri
+        setImage(plantEntryList[position].imageName!!, viewHolder)
 
-        if (!imageUriString.isNullOrEmpty()) {
-            val imageUri = Uri.parse(imageUriString)
-            viewHolder.imageView!!.setImageURI(imageUri)
-        } else {
-            viewHolder.imageView!!.setImageResource(R.drawable.default_plant_profile_pic) // Set a default image
-        }
-
-        viewHolder.textView!!.text = plant.plantName
+        viewHolder.textView!!.text = plantEntryList[position].plantName
 
         view.setOnClickListener {
             val intent = Intent(context, PlantInfoActivity::class.java)
@@ -61,6 +62,52 @@ class GridItemAdapter(private val context: Context,
             context.startActivity(intent)
         }
         return view
+    }
+
+    private fun setImage(imageName: String, viewHolder: ViewHolder) {
+        val firebaseStorageRef = Firebase.storage.reference.child(imageName!!)
+        val externalFilesDir = context.getExternalFilesDir(null)
+        if (externalFilesDir != null) {
+            var tempImgFile = File(externalFilesDir, imageName)
+            // Check if the file exists
+            if (!tempImgFile.exists()) {
+                // If the file doesn't exist, proceed with the download
+                firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                    // Successfully downloaded the byte array
+                    try {
+                        val stream = FileOutputStream(tempImgFile)
+                        stream.write(bytes)
+                        stream.flush()
+                        stream.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                    var tempImgUri = FileProvider.getUriForFile(
+                        context,
+                        context.getString(R.string.com_example_plantcare),
+                        tempImgFile
+                    )
+                    viewHolder.imageView!!.setImageURI(tempImgUri)
+                }.addOnFailureListener { exception ->
+                    // Errors that occurred during the download
+                    Log.e(javaClass.simpleName,
+                        context.getString(R.string.error_downloading_image, exception.message), exception)
+                }
+            } else {
+                // If the file already exists, use it directly
+                var tempImgUri = FileProvider.getUriForFile(
+                    context,
+                    context.getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+                viewHolder.imageView!!.setImageURI(tempImgUri)
+            }
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     fun replace(newPlantList: List<Plant>) {

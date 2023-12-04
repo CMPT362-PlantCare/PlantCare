@@ -2,8 +2,6 @@
     <string name="app_name">PlantCare</string>
 
     <!-- LOGIN & SIGN UP ACTIVITY -->
-
-    <string name="user_email_intent_tag">user-email-intent-tag</string>
     <string name="create_your_password">Create Your Password</string>
     <string name="re_enter_your_password">Re-Enter Your Password</string>
     <string name="sign_up">Sign Up</string>
@@ -12,6 +10,17 @@
     <string name="enter_your_password">Enter Your Password</string>
     <string name="login">Login</string>
     <string name="not_registered_yet_sign_up"><b>Not Registered Yet? <u>Sign Up</u></b></string>
+    <string name="login_attempt_limit_exceeded_please_try_again_later">Login Attempt Limit Exceeded. Please Try Again Later.</string>
+    <string name="invalid_password_please_try_again">Invalid Password. Please Try Again.</string>
+    <string name="invalid_email_format_please_enter_a_valid_email_address">Invalid email format. Please enter a valid email address.</string>
+    <string name="email_address_is_badly_formatted">email address is badly formatted</string>
+    <string name="auth_credential_is_incorrect">auth credential is incorrect</string>
+    <string name="unusual_activity">unusual activity</string>
+    <string name="login_failed_please_try_again_later">Login failed. Please try again later.</string>
+    <string name="please_fill_all_fields">Please Fill Out All Fields</string>
+    <string name="passwords_do_not_match">Passwords Do Not Match</string>
+    <string name="please_enter_a_valid_email">Please Enter A Valid Email.</string>
+    <string name="signup_failed_please_try_again_later">Signup failed. Please try again later.</string>
 
     <!-- DASHBOARD ACTIVITY -->
     <string name="greeting_message">Hello, %s</string>
@@ -44,14 +53,39 @@
     <string name="update">Update</string>
     <string name="oops_missing_external_file_directory">Oops! Missing External File Directory</string>
     <string name="img_date_format">yyyyMMdd_HHmmss</string>
-    <string name="img_name_format">image_%1$s</string>
+    <string name="img_name_format">image_%1$s.png</string>
     <string name="event_list_title">Watering</string>
     <string name="logout_dialog_fragment_tag">LogoutDialogFragment</string>
     <string name="edit_plant">Edit Plant</string>
+    <string name="failed_to_read_value">Failed to read value.</string>
+    <string name="tag">TAG</string>
+    <string name="firebase_users_key">Users</string>
+    <string name="error_downloading_image">Error Downloading Image: %1$s</string>
+    <string name="plants_firebase_key">plants</string>
+    <string name="data_prenual_key">data</string>
+    <string name="common_name_prenual_key">common_name</string>
+    <string name="id_prenual_key">id</string>
+    <string name="get">GET</string>
+    <string name="error_deleting_image_from_firebase_storage">Error deleting image from Firebase Storage: %1$s</string>
+    <string name="invalid_autocomplete_position">Invalid Autocomplete Position</string>
+    <string name="dob_f_string">DOB: %1$s</string>
+    <string name="dd_mmm_yyyy">dd MMM yyyy</string>
+    <string name="your_plants">Your Plants:</string>
+    <string name="add_new_plant">Add New Plant</string>
+    <string name="weak_password">Weak Password.</string>
+    <string name="this_email_is_already_registered">This Email Is Already Registered</string>
 
     <string-array name="pictureEntries">
         <item>Open Camera</item>
         <item>Select from Gallery</item>
     </string-array>
+
+    <!-- PLANT INFO ACTIVITY -->
+    <string name="plant_info_species">Plant Species: %1$s</string>
+    <string name="plant_info_dob">\nDate Of Birth: %1$s</string>
+    <string name="plant_info_watering">Watering:\n</string>
+    <string name="plant_info_watering_details">\n\nBased on pot size, we recommend watering %1$s every %2$d days.</string>
+    <string name="plant_info_sunlight">Sunlight:\n</string>
+    <string name="plant_info_pruning">Pruning:\n</string>
 
 </resources>

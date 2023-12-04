@@ -28,13 +28,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
+private const val EMPTY_STRING = ""
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var gridItemAdapter: GridItemAdapter
     private lateinit var plantEntryList: ArrayList<Plant>
-    private lateinit var userEmail: String
     private lateinit var gridView: GridView
     private lateinit var navigationView: BottomNavigationView
 
@@ -50,11 +50,13 @@ class DashboardActivity : AppCompatActivity() {
 
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
-        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
 
-        userEmail = intent.getStringExtra(getString(R.string.user_email_intent_tag))?.substringBefore('@') ?: ""
+        userRef = firebaseDatabase.reference.child(getString(R.string.firebase_users_key)).child(firebaseAuth.currentUser?.uid!!)
 
-        binding.greetingTextView.text = getString(R.string.greeting_message, userEmail)
+        val userEmail = firebaseAuth.currentUser!!.email
+        val userName = userEmail!!.substringBefore('@')
+
+        binding.greetingTextView.text = getString(R.string.greeting_message, userName)
 
         gridView = binding.gridView
         navigationView = binding.bottomNavigation
@@ -106,7 +108,7 @@ class DashboardActivity : AppCompatActivity() {
 
     private fun loadPlants() {
         CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+            userRef.child(getString(R.string.plants_firebase_key)).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val plantEntryList = mutableListOf<Plant>()
 
@@ -122,7 +124,7 @@ class DashboardActivity : AppCompatActivity() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }

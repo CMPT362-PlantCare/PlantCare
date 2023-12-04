@@ -10,8 +10,15 @@ import android.widget.BaseAdapter
 import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
+import android.widget.Toast
 import androidx.core.content.ContextCompat.getColor
+import androidx.core.content.FileProvider
+import com.google.firebase.ktx.Firebase
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
 import java.time.LocalDate
+import com.google.firebase.storage.ktx.storage
 
 class WateringEventsListAdapter(private val context: Context,
                                 private var plantEntryList: List<Plant>,
@@ -37,14 +44,8 @@ class WateringEventsListAdapter(private val context: Context,
         val nameTextView = view.findViewById<TextView>(R.id.tvPlantNameSchedule)
         val statusButton = view.findViewById<Button>(R.id.btnWateringSchedule)
         nameTextView.text = plant.plantName
-        plant.imageUri?.let {
-            if (it.isNotEmpty()) {
-                val imageUri = Uri.parse(it)
-                imageView.setImageURI(imageUri)
-            } else {
-                imageView.setImageResource(R.drawable.default_plant_profile_pic) // Set default image
-            }
-        } ?: imageView.setImageResource(R.drawable.default_plant_profile_pic) // Set default image if URI is null
+
+        setImage(plantEntryList[position].imageName!!, imageView)
 
         val wasWateredOnSelectedDate = selectedDate.toString() in plant.wateringHistory
         if (wasWateredOnSelectedDate) {
@@ -70,6 +71,52 @@ class WateringEventsListAdapter(private val context: Context,
         }
 
         return view
+    }
+
+    private fun setImage(imageName: String, view: ImageView) {
+        val firebaseStorageRef = Firebase.storage.reference.child(imageName!!)
+        val externalFilesDir = context.getExternalFilesDir(null)
+        if (externalFilesDir != null) {
+            var tempImgFile = File(externalFilesDir, imageName)
+            // Check if the file exists
+            if (!tempImgFile.exists()) {
+                // If the file doesn't exist, proceed with the download
+                firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                    // Successfully downloaded the byte array
+                    try {
+                        val stream = FileOutputStream(tempImgFile)
+                        stream.write(bytes)
+                        stream.flush()
+                        stream.close()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                    var tempImgUri = FileProvider.getUriForFile(
+                        context,
+                        context.getString(R.string.com_example_plantcare),
+                        tempImgFile
+                    )
+                    view!!.setImageURI(tempImgUri)
+                }.addOnFailureListener { exception ->
+                    // Errors that occurred during the download
+                    Log.e(javaClass.simpleName,
+                        context.getString(R.string.error_downloading_image, exception.message), exception)
+                }
+            } else {
+                // If the file already exists, use it directly
+                var tempImgUri = FileProvider.getUriForFile(
+                    context,
+                    context.getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+                view!!.setImageURI(tempImgUri)
+            }
+        } else {
+            Toast.makeText(
+                context,
+                context.getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
+        }
     }
 
     fun replace(newPlantList: List<Plant>, date: LocalDate) {

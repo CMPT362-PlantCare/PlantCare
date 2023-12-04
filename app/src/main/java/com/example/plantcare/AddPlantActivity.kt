@@ -3,7 +3,6 @@ package com.example.plantcare
 import android.Manifest
 import android.app.Activity
 import android.app.DatePickerDialog
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
@@ -22,6 +21,7 @@ import android.widget.ArrayAdapter
 import android.widget.DatePicker
 import android.widget.RadioButton
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -30,6 +30,7 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.graphics.drawable.toBitmap
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.ViewModelProvider
 import com.example.plantcare.databinding.ActivityAddplantBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
@@ -42,6 +43,7 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -60,20 +62,24 @@ import java.util.Date
 import java.util.Locale
 
 
-
 private const val EMPTY_STRING = ""
 private const val INT_VAL_UNKNOWN = -1
 private const val DEFAULT_POSITION = -1
 private const val CHECKED_TP_KEY = "checked_tp_key"
 private const val CHECKED_DH_KEY = "checked_dh_key"
 private const val NAME_KEY = "name_key"
+private const val CALENDAR_TIME_MILLIS = "calendar_time_millis"
 private const val SPECIES_KEY = "species_key"
 private const val POT_SIZE_KEY = "pot_size_key"
+private const val IMG_NAME_KEY = "img_name_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
+private const val DOB_TEXT_KEY = "dob_text_key"
 private const val BYTE_ARRAY_SIZE = 1024
+private const val ZERO = 0
 private const val FILE_COPY_OFFSET = 0
+private const val DOUBLE_ZERO = 0.0
 
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     companion object {
@@ -92,7 +98,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
     private lateinit var navigationView: BottomNavigationView
-    private var speciesId = ""
+    private var speciesId = EMPTY_STRING
 
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
@@ -103,13 +109,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private var saveImgFlag: Boolean = false
     private var isImageNameSet: Boolean = false
     private var imageName: String = EMPTY_STRING
+    private var calendarTimeMillis: Long = System.currentTimeMillis()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
-        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
+        userRef = firebaseDatabase.reference.child(getString(R.string.firebase_users_key)).child(firebaseAuth.currentUser?.uid!!)
 
         binding = ActivityAddplantBinding.inflate(layoutInflater)
 
@@ -127,6 +134,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         when (pageType) {
             PLANT_VIEW -> {
+                supportActionBar?.title = getString(R.string.edit_plant)
                 if (!isRenderedPlantEntry) {
                     getPlantEntryAndPopulateFields()
                     isRenderedPlantEntry = true
@@ -135,7 +143,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
             }
 
-            PLANT_ADD -> setUpTempImage()
+            PLANT_ADD -> {
+                supportActionBar?.title = getString(R.string.add_new_plant)
+                setUpTempImage()
+            }
         }
 
         setUpViewModel()
@@ -143,10 +154,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         cameraResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult())
         { result: ActivityResult ->
             if (result.resultCode == Activity.RESULT_OK) {
-
-                val bitmap = getBitmap(this, tempImgUri)
+                val bitmap = getBitmap(tempImgUri)
                 binding.imageView
-                setPicture(addPlantViewModel, bitmap)
+                if(bitmap != null){
+                    setPicture(addPlantViewModel, bitmap)
+                }
             }
         }
 
@@ -156,16 +168,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     val selectedImageUri = result.data?.data
                     if (selectedImageUri != null) {
                         copyImage(selectedImageUri, tempImgUri)
-
-                        val bitmap = getBitmap(this, tempImgUri)
-                        setPicture(addPlantViewModel, bitmap)
+                        val bitmap = getBitmap(tempImgUri)
+                        if(bitmap != null) {
+                            setPicture(addPlantViewModel, bitmap)
+                        }
                     }
                 }
             }
 
         setUpSpeciesTextWatcher()
-
-        /* Bottom Navigator */
         bottomNavigation()
     }
 
@@ -178,31 +189,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         var position = intent.getIntExtra(getString(R.string.position_key), DEFAULT_POSITION)
         return when (item.itemId) {
             R.id.action_delete -> {
-                if (position != DEFAULT_POSITION) {
-                    CoroutineScope(Dispatchers.IO).launch {
-                        userRef.child("plants").addListenerForSingleValueEvent(object : ValueEventListener {
-                            override fun onDataChange(snapshot: DataSnapshot) {
-                                if (position >= 0 && position < snapshot.childrenCount) {
-                                    val plantSnapshot = snapshot.children.toList()[position]
-                                    val plantId = plantSnapshot.key
-
-                                    if (plantId != null) {
-                                        userRef.child("plants").child(plantId).removeValue()
-                                        finish()
-                                    }
-                                }
-                            }
-                            override fun onCancelled(error: DatabaseError) {
-                                Log.w("TAG", "Failed to read value.", error.toException())
-                            }
-                        })
-                    }
-
-                    Toast.makeText(
-                        this,
-                        getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
-                    ).show()
-                }
+                deletePlant(position)
                 return true
             }
 
@@ -220,6 +207,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putBoolean(RENDERED_PLANT_ENTRY, isRenderedPlantEntry)
         outState.putBoolean(IMAGE_NAME_SET, isImageNameSet)
         outState.putString(TEMP_IMG_URI, tempImgUri.toString())
+        outState.putString(IMG_NAME_KEY, imageName)
+        outState.putString(DOB_TEXT_KEY, binding.dob.text.toString())
+        outState.putLong(CALENDAR_TIME_MILLIS, calendarTimeMillis)
     }
 
     private fun setUpViewModel() {
@@ -265,14 +255,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun setUpSpeciesTextWatcher() {
-        binding.speciesAutocomplete.onItemClickListener = OnItemClickListener { parent, arg1, pos, id ->
-            if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
-                speciesId = addPlantViewModel.id.value?.get(pos) ?: ""
+        binding.speciesAutocomplete.onItemClickListener =
+            OnItemClickListener { _, _, pos, _ ->
+                if (addPlantViewModel.id.value != null && pos < addPlantViewModel.id.value!!.size) {
+                    speciesId = addPlantViewModel.id.value?.get(pos) ?: EMPTY_STRING
+                } else {
+                    println(getString(R.string.invalid_autocomplete_position))
+                }
             }
-            else {
-                println("invalid autocomplete position")
-            }
-        }
 
         binding.speciesAutocomplete.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable) {}
@@ -295,9 +285,63 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         })
     }
 
+    private fun deletePlant(position: Int) {
+        if (position != DEFAULT_POSITION) {
+            userRef.child(getString(R.string.plants_firebase_key))
+                .addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onDataChange(snapshot: DataSnapshot) {
+                        if (position >= ZERO && position < snapshot.childrenCount) {
+                            val plantSnapshot = snapshot.children.toList()[position]
+                            val plantId = plantSnapshot.key
+                            if (plantId != null) {
+                                // Delete image from Firebase Storage
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    val firebaseStorageRef =
+                                        Firebase.storage.reference.child(imageName)
+                                    firebaseStorageRef.delete().addOnFailureListener { exception ->
+                                        Log.e(
+                                            javaClass.simpleName,
+                                            getString(
+                                                R.string.error_deleting_image_from_firebase_storage,
+                                                exception.message
+                                            ), exception
+                                        )
+                                    }.await()
+                                }
+
+                                // Delete image from local file system
+                                deleteImage()
+
+                                // Delete plant
+                                CoroutineScope(Dispatchers.IO).launch {
+                                    userRef.child(getString(R.string.plants_firebase_key))
+                                        .child(plantId).removeValue().await()
+                                }
+                                finish()
+                            }
+                        }
+                    }
+
+                    override fun onCancelled(error: DatabaseError) {
+                        Log.w(
+                            getString(R.string.tag),
+                            getString(R.string.failed_to_read_value),
+                            error.toException()
+                        )
+                    }
+                })
+
+            Toast.makeText(
+                this,
+                getString(R.string.plant_deleted_toast_message), Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
     private fun setUpTempImage() {
         // Load the default image drawable
-        val defaultImageDrawable = ContextCompat.getDrawable(this, R.drawable.default_plant_profile_pic)
+        val defaultImageDrawable =
+            ContextCompat.getDrawable(this, R.drawable.default_plant_profile_pic)
 
         // Set the default image to the ImageView
         binding.imageView.setImageDrawable(defaultImageDrawable)
@@ -314,27 +358,38 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             // Create a File for the temp image
             tempImgFile = File(externalFilesDir, imageName)
 
-            // Convert the default image drawable to a Bitmap
-            val bitmap = defaultImageDrawable?.toBitmap()
+            if (!tempImgFile.exists()) {
+                // Convert the default image drawable to a Bitmap
+                val bitmap = defaultImageDrawable?.toBitmap()
 
-            // Save the Bitmap to the tempImgFile
-            try {
-                val stream = FileOutputStream(tempImgFile)
-                bitmap?.compress(Bitmap.CompressFormat.PNG, 100, stream)
-                stream.flush()
-                stream.close()
-            } catch (e: IOException) {
-                e.printStackTrace()
+                // Save the Bitmap to the tempImgFile
+                try {
+                    val stream = FileOutputStream(tempImgFile)
+                    bitmap?.compress(Bitmap.CompressFormat.JPEG, 100, stream)
+                    stream.flush()
+                    stream.close()
+                } catch (e: IOException) {
+                    e.printStackTrace()
+                }
+
+                tempImgUri = FileProvider.getUriForFile(
+                    this,
+                    getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
             }
-
-            tempImgUri = FileProvider.getUriForFile(
-                this,
-                getString(R.string.com_example_plantcare),
-                tempImgFile
-            )
+            else {
+                tempImgUri = FileProvider.getUriForFile(
+                    this,
+                    getString(R.string.com_example_plantcare),
+                    tempImgFile
+                )
+            }
         } else {
-            Toast.makeText(this,
-                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT).show()
+            Toast.makeText(
+                this,
+                getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -342,16 +397,18 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         CoroutineScope(Dispatchers.IO).launch {
             userRef.child("plants").addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position >= 0 && position < snapshot.children.toList().size) {
-                        val plantEntry = snapshot.children.toList()[position].getValue(Plant::class.java)
-                        if(plantEntry != null){
+                    if (position != INT_VAL_UNKNOWN && position >= ZERO && position < snapshot.children.toList().size) {
+                        val plantEntry =
+                            snapshot.children.toList()[position].getValue(Plant::class.java)
+                        if (plantEntry != null) {
                             populateFields(plantEntry)
-                            speciesId = plantEntry.plantSpeciesId ?: ""
+                            speciesId = plantEntry.plantSpeciesId ?: EMPTY_STRING
                         }
                     }
                 }
+
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }
@@ -365,7 +422,49 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
     private fun populateFields(plantEntry: Plant) {
         runOnUiThread {
-            tempImgUri = Uri.parse(plantEntry.imageUri)
+            if (plantEntry.imageName != null) {
+                val imgName = plantEntry.imageName
+                imageName = imgName!!
+                val firebaseStorageRef = Firebase.storage.reference.child(imageName)
+                val externalFilesDir = getExternalFilesDir(null)
+                if (externalFilesDir != null) {
+                    tempImgFile = File(externalFilesDir, imageName)
+                    if (!tempImgFile.exists()) {
+                        // If the file doesn't exist, proceed with the download
+                        firebaseStorageRef.getBytes(Long.MAX_VALUE).addOnSuccessListener { bytes ->
+                            // Successfully downloaded the byte array
+                            try {
+                                val stream = FileOutputStream(tempImgFile)
+                                stream.write(bytes)
+                                stream.flush()
+                                stream.close()
+                            } catch (e: IOException) {
+                                e.printStackTrace()
+                            }
+                            tempImgUri = FileProvider.getUriForFile(
+                                this,
+                                getString(R.string.com_example_plantcare),
+                                tempImgFile
+                            )
+                        }.addOnFailureListener { exception ->
+                            // Handle any errors that occurred during the download
+                            Log.e(javaClass.simpleName, getString(R.string.error_downloading_image, exception.message), exception)
+                        }
+                    } else {
+                        // If the file already exists, use it directly
+                        tempImgUri = FileProvider.getUriForFile(
+                            this,
+                            getString(R.string.com_example_plantcare),
+                            tempImgFile
+                        )
+                    }
+                } else {
+                    Toast.makeText(
+                        this,
+                        getString(R.string.oops_missing_external_file_directory), Toast.LENGTH_SHORT
+                    ).show()
+                }
+            }
 
             binding.imageView.setImageURI(tempImgUri)
 
@@ -376,19 +475,28 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             binding.sizeEditText.setText(plantEntry.potSize.toString())
 
             if (plantEntry.drainageHoles != null) {
-                if(plantEntry.drainageHoles == true){
+                if (plantEntry.drainageHoles == true) {
                     binding.yesDrainageRadioButton.isChecked = true
                 } else {
                     binding.noDrainageRadioButton.isChecked = true
                 }
             }
 
-            if(plantEntry.terracottaPot != null){
+            if (plantEntry.terracottaPot != null) {
                 if (plantEntry.terracottaPot == true) {
                     binding.yesTerracottaRadioButton.isChecked = true
                 } else {
                     binding.noTerracottaRadioButton.isChecked = true
                 }
+            }
+
+            if(plantEntry.adoptionDate != null){
+                calendarTimeMillis = plantEntry.adoptionDate!!
+                val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
+                val formattedDate = dateFormat.format(Date(calendarTimeMillis))
+
+                val dobText = getString(R.string.dob_f_string, formattedDate)
+                binding.dob.text = dobText
             }
         }
     }
@@ -404,30 +512,32 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             val name = savedInstanceState.getString(NAME_KEY, EMPTY_STRING)
             val species = savedInstanceState.getString(SPECIES_KEY, EMPTY_STRING)
             val potSize = savedInstanceState.getString(POT_SIZE_KEY, EMPTY_STRING)
+            val dobText = savedInstanceState.getString(DOB_TEXT_KEY, EMPTY_STRING)
 
             binding.nameEditText.setText(name)
             binding.speciesAutocomplete.setText(species)
             binding.sizeEditText.setText(potSize)
+            binding.dob.text = dobText
+
 
             isRenderedPlantEntry = savedInstanceState.getBoolean(RENDERED_PLANT_ENTRY, false)
             isImageNameSet = savedInstanceState.getBoolean(IMAGE_NAME_SET, false)
+            imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
+            calendarTimeMillis = savedInstanceState.getLong(CALENDAR_TIME_MILLIS, System.currentTimeMillis())
         }
     }
 
-    override fun onDateSet(p0: DatePicker?, p1: Int, p2: Int, p3: Int) {
-        calendar.set(Calendar.YEAR, p1)
-        calendar.set(Calendar.MONTH, p2)
-        calendar.set(Calendar.DAY_OF_MONTH, p3)
-    }
+    override fun onDateSet(view: DatePicker?, year: Int, monthOfYear: Int, dayOfMonth: Int) {
+        calendar.set(Calendar.YEAR, year)
+        calendar.set(Calendar.MONTH, monthOfYear)
+        calendar.set(Calendar.DAY_OF_MONTH, dayOfMonth)
 
-    private fun confirmAndCheckRadioButton(id: Int) {
-        if (id != INT_VAL_UNKNOWN) {
-            val radioButton = findViewById<RadioButton>(id)
-            if (radioButton != null) {
-                radioButton.isChecked = true
-            }
-        }
+        val dateFormat = SimpleDateFormat(getString(R.string.dd_mmm_yyyy), Locale.getDefault())
+        calendarTimeMillis = calendar.timeInMillis
+        val formattedDate = dateFormat.format(calendarTimeMillis)
+        val dobText = getString(R.string.dob_f_string, formattedDate)
+        binding.dob.text = dobText
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -437,6 +547,15 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
 
         return true
+    }
+
+    private fun confirmAndCheckRadioButton(id: Int) {
+        if (id != INT_VAL_UNKNOWN) {
+            val radioButton = findViewById<RadioButton>(id)
+            if (radioButton != null) {
+                radioButton.isChecked = true
+            }
+        }
     }
 
     private fun requestPermissions() {
@@ -461,12 +580,21 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 this, arrayOf(
                     Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA,
                     Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.INTERNET
-                ), 0
+                ), ZERO
             )
         }
     }
 
     private fun initButtons() {
+        // Back Button
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                cleanUp()
+                finish()
+            }
+        })
+
+        // Photo Button
         binding.photoButton.setOnClickListener {
             val pictureDialog = PictureDialogFragment()
             pictureDialog.show(supportFragmentManager, "tag")
@@ -479,13 +607,19 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     }
                 }
         }
+
+        // DOB Button
         binding.dobButton.setOnClickListener {
             handleDateInput()
         }
+
+        // Cancel Button
         binding.cancelButton.setOnClickListener {
             finish()
+            cleanUp()
         }
 
+        // Add / Update Buttons
         if (pageType == PLANT_VIEW) {
             binding.addButton.text = getString(R.string.update)
             binding.addButton.setOnClickListener {
@@ -499,25 +633,42 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun cleanUp()
+    {
+        if(pageType == PLANT_ADD){
+            deleteImage()
+        }
+    }
+
+    private fun deleteImage() {
+        if (tempImgFile.exists()) {
+            tempImgFile.delete()
+        } else {
+            Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
+        }
+    }
+
     private fun updatePlant() {
         CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+            userRef.child(getString(R.string.plants_firebase_key)).addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    if (position != -1 && position >=0 && position < snapshot.children.toList().size) {
-                        val plantSnapshot =  snapshot.children.toList()[position]
+                    if (position != INT_VAL_UNKNOWN && position >= ZERO && position < snapshot.childrenCount) {
+                        val plantSnapshot = snapshot.children.toList()[position]
                         val plantId = plantSnapshot.key
-                        val plantEntry =  plantSnapshot.getValue(Plant::class.java)
-                        if(plantEntry != null){
+                        val plantEntry = plantSnapshot.getValue(Plant::class.java)
+
+                        if (plantEntry != null) {
                             setPlantEntryAttributes(plantEntry)
                         }
+
                         if (plantId != null) {
-                            userRef.child("plants").child(plantId).setValue(plantEntry)
+                            userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry)
                             finish()
                         }
                     }
                 }
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }
@@ -526,10 +677,10 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun savePlantToDatabase() {
         val plantEntry = Plant()
         setPlantEntryAttributes(plantEntry)
-        val plantId = userRef.child("plants").push().key
+        val plantId = userRef.child(getString(R.string.plants_firebase_key)).push().key
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {
-                userRef.child("plants").child(plantId).setValue(plantEntry).await()
+                userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry).await()
                 finish()
             }
         }
@@ -539,19 +690,39 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         plantEntry.plantName = binding.nameEditText.text.toString()
         plantEntry.plantSpecies = binding.speciesAutocomplete.text.toString()
         plantEntry.plantSpeciesId = speciesId
-        var potSize = 0.0
+        var potSize = DOUBLE_ZERO
         val potSizeString = binding.sizeEditText.text.toString()
         if (potSizeString.isNotEmpty()) {
             potSize = potSizeString.toDouble()
         }
         plantEntry.potSize = potSize
         val freq = Helpers.getWateringFreq(speciesId)
-        plantEntry.wateringFreq = if (freq != "") (if (potSize != 0.0) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
-        plantEntry.imageUri = tempImgUri.toString()
+        plantEntry.wateringFreq =
+            if (freq != EMPTY_STRING) (if (potSize != DOUBLE_ZERO) (freq.toInt() * (potSize.toInt() / 5)) else freq.toInt()) else 7
 
-        plantEntry.adoptionDate = calendar.timeInMillis
+        storeImageToCloud()
+
+        plantEntry.imageName = imageName
+
+        plantEntry.adoptionDate = calendarTimeMillis
         plantEntry.terracottaPot = binding.yesTerracottaRadioButton.isChecked
         plantEntry.drainageHoles = binding.yesDrainageRadioButton.isChecked
+    }
+
+    private fun storeImageToCloud() {
+        CoroutineScope(Dispatchers.IO).launch {
+            val firebaseStorageRef = Firebase.storage.reference.child(imageName)
+
+            try {
+                firebaseStorageRef.putFile(tempImgUri)
+                    .addOnFailureListener { exception ->
+                        Log.e(javaClass.simpleName, exception.message, exception)
+                    }
+                    .await()
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
     }
 
     private fun openCamera() {
@@ -561,12 +732,19 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     }
 
     private fun handleDateInput() {
-        val datePickerDialog = DatePickerDialog(
+        var datePickerDialog: DatePickerDialog
+
+        val selectedDate = Date(calendarTimeMillis)
+        val calendar = Calendar.getInstance()
+        calendar.time = selectedDate
+
+        datePickerDialog = DatePickerDialog(
             this, this,
             calendar.get(Calendar.YEAR),
             calendar.get(Calendar.MONTH),
             calendar.get(Calendar.DAY_OF_MONTH)
         )
+
         datePickerDialog.show()
     }
 
@@ -576,10 +754,48 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         galleryResult.launch(intent)
     }
 
-    private fun getBitmap(context: Context, imgUri: Uri): Bitmap {
-        val bitmap = BitmapFactory.decodeStream(context.contentResolver.openInputStream(imgUri))
-        val matrix = Matrix()
-        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+    private fun getBitmap(imgUri: Uri): Bitmap? {
+        try {
+            val inputStream = contentResolver.openInputStream(imgUri)
+            val bitmap = BitmapFactory.decodeStream(inputStream)
+
+            val exif = ExifInterface(imgUri.path.toString())
+
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_UNDEFINED
+            )
+
+            val matrix = Matrix()
+
+            when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> {
+                    matrix.setRotate(90f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_180 -> {
+                    matrix.setRotate(180f)
+                }
+                ExifInterface.ORIENTATION_ROTATE_270 -> {
+                    matrix.setRotate(270f)
+                }
+                else -> {
+                    return bitmap // No need to rotate
+                }
+            }
+
+            return Bitmap.createBitmap(
+                bitmap,
+                ZERO,
+                ZERO,
+                bitmap.width,
+                bitmap.height,
+                matrix,
+                true
+            )
+        } catch (e: IOException) {
+            e.printStackTrace()
+            return null
+        }
     }
 
     private fun setPicture(viewModel: AddPlantViewModel, bitmap: Bitmap) {
@@ -588,27 +804,33 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         saveImgFlag = true
     }
 
-    private fun bottomNavigation(){
+    private fun bottomNavigation() {
         navigationView.selectedItemId = R.id.add_plant
-        navigationView.setOnNavigationItemSelectedListener{ item ->
+        navigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.dashboard_home -> {
+                    cleanUp()
                     val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 R.id.calender -> {
+                    cleanUp()
                     val intent = Intent(this, ScheduleActivity::class.java)
                     startActivity(intent)
 
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 R.id.reminder -> {
+                    cleanUp()
                     val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)
 
                     return@setOnNavigationItemSelectedListener true
                 }
+
                 else -> false
             }
         }
@@ -617,21 +839,21 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val apiKey =  BuildConfig.PLANT_API_KEY
+                val apiKey = BuildConfig.PLANT_API_KEY
                 val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
 
                 with(url.openConnection() as HttpURLConnection) {
-                    requestMethod = "GET"
+                    requestMethod = getString(R.string.get)
                     inputStream.bufferedReader().use {
                         val speciesList = ArrayList<String>()
                         val idList = ArrayList<String>()
                         it.lines().forEach { line ->
                             var response = JSONObject(line)
-                            var valueArray = response.getJSONArray("data")
-                            for (t in 0 until valueArray.length()) {
-                                var name = valueArray.getJSONObject(t).getString("common_name")
+                            var valueArray = response.getJSONArray(getString(R.string.data_prenual_key))
+                            for (t in ZERO until valueArray.length()) {
+                                var name = valueArray.getJSONObject(t).getString(getString(R.string.common_name_prenual_key))
                                 speciesList.add(name)
-                                var id = valueArray.getJSONObject(t).getString("id")
+                                var id = valueArray.getJSONObject(t).getString(getString(R.string.id_prenual_key))
                                 idList.add(id)
                             }
                         }
