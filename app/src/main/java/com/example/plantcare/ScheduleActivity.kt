@@ -128,7 +128,7 @@ class ScheduleActivity : AppCompatActivity() {
                     plantEntryList.clear() // Clear the existing list
                     plantEntryList.addAll(newPlantEntryList)
                     updateWateringSchedule(plantEntryList)
-                    if(wateringSchedule.containsKey(today)) {
+                    if(wateringSchedule.containsKey(today) && selectedDate == null) {
                         selectDate(today)
                         val plantsToWater = wateringSchedule[today]
                         Log.d("WateringEventsListAdapter", "Plants to water: ${plantsToWater?.map { it.plantName }}")

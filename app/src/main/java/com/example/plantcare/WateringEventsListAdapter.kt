@@ -52,6 +52,7 @@ class WateringEventsListAdapter(private val context: Context,
             statusButton.text = "Done"
             statusButton.isEnabled = false
             statusButton.setBackgroundColor(getColor(context, R.color.grey)) // Set grey background
+            statusButton.setTextColor(getColor(context, R.color.white))
         } else {
             statusButton.text = "Complete"
             statusButton.isEnabled = true
@@ -68,6 +69,7 @@ class WateringEventsListAdapter(private val context: Context,
             statusButton.text = "Done"
             statusButton.isEnabled = false
             statusButton.setBackgroundColor(getColor(context, R.color.grey))
+            statusButton.setTextColor(getColor(context, R.color.white))
         }
 
         return view
