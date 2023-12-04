@@ -606,6 +606,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun goToDashboard() {
+        val signupActivityIntent = Intent(this, SignupActivity::class.java)
+        startActivity(signupActivityIntent)
+    }
+
     private fun initButtons() {
         // Back Button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -616,6 +621,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     }
                 }
                 cleanUp()
+                goToDashboard()
                 finish()
             }
         })
@@ -646,8 +652,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     copyImage(copyImgUri, tempImgUri)
                 }
             }
-            finish()
             cleanUp()
+            goToDashboard()
+            finish()
         }
 
         // Add / Update Buttons
@@ -706,6 +713,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                         if (plantId != null) {
                             userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry)
                             deleteImageCopy()
+                            goToDashboard()
                             finish()
                         }
                     }
@@ -725,6 +733,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry).await()
+                goToDashboard()
                 finish()
             }
         }

@@ -63,7 +63,6 @@ class DashboardActivity : AppCompatActivity() {
         /* User's added Plants in gridView*/
         setUpGridItemAdapter()
 
-
         loadPlants()
 
         /* Bottom Navigator */
@@ -150,7 +149,8 @@ class DashboardActivity : AppCompatActivity() {
                         val intent = Intent(this, AddPlantActivity::class.java)
                         intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
                         startActivity(intent)
-
+                        finish()
+                        
                         return@setOnNavigationItemSelectedListener true
                     }
                     R.id.calender -> {
