@@ -135,11 +135,6 @@ class DashboardActivity : AppCompatActivity() {
         val myIntent = Intent(this, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(this, 0, myIntent, PendingIntent.FLAG_MUTABLE)
 
-        /* for testing Purpose - Will delete at the end*/
-        /*alarmManager.setExact(AlarmManager.RTC_WAKEUP,
-            calendar.timeInMillis,
-            pendingIntent
-        )*/
         alarmManager.setRepeating(
             AlarmManager.RTC_WAKEUP,
             Calendar.getInstance().timeInMillis,

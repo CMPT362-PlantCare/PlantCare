@@ -25,6 +25,8 @@ data class Plant(
 
     var wateringFreq: Int = 10,
 
+    var lastWateredDate: Long? = null,
+
     //"YYYY-MM-DD"
     var wateringHistory: List<String> = emptyList(),
 )
