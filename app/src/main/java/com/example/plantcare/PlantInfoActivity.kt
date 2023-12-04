@@ -93,7 +93,7 @@ class PlantInfoActivity : AppCompatActivity() {
                                         var section = sections.getJSONObject(t)
                                         var type = section.getString("type")
                                         when (type) {
-                                            "watering" -> binding.wateringTextView.text = "Watering:\n" + section.getString("description") + "\n\nBased on pot size, we recommend watering ${plantEntry.plantName} every ${plantEntry.wateringFreq} days."
+                                            "watering" -> binding.wateringTextView.text = "Watering:\n" + section.getString("description") + "\n\nBased on the provided attributes, we recommend watering ${plantEntry.plantName} every ${plantEntry.wateringFreq} days."
                                             "sunlight" -> binding.sunlightTextView.text = "Sunlight:\n" + section.getString("description")
                                             "pruning" -> binding.pruningTextView.text = "Pruning:\n" + section.getString("description")
                                         }
