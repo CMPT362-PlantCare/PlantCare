@@ -43,9 +43,17 @@ class GridItemAdapter(private val context: Context,
             viewHolder = view.tag as ViewHolder
         }
 
-        val imageUri = Uri.parse(plantEntryList[position].imageUri)
-        viewHolder.imageView!!.setImageURI(imageUri)
-        viewHolder.textView!!.text = plantEntryList[position].plantName
+        val plant = plantEntryList[position]
+        val imageUriString = plant.imageUri
+
+        if (!imageUriString.isNullOrEmpty()) {
+            val imageUri = Uri.parse(imageUriString)
+            viewHolder.imageView!!.setImageURI(imageUri)
+        } else {
+            viewHolder.imageView!!.setImageResource(R.drawable.default_plant_profile_pic) // Set a default image
+        }
+
+        viewHolder.textView!!.text = plant.plantName
 
         view.setOnClickListener {
             val intent = Intent(context, PlantInfoActivity::class.java)

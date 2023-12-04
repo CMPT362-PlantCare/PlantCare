@@ -5,7 +5,7 @@ import com.google.firebase.database.IgnoreExtraProperties
 
 @IgnoreExtraProperties
 data class Plant(
-    var id: Long? = null,
+    var firebaseKey: String? = null, // Firebase key
 
     var plantName: String? = null,
 
@@ -24,4 +24,7 @@ data class Plant(
     var imageUri: String? = null,
 
     var wateringFreq: Int = 10,
+
+    //"YYYY-MM-DD"
+    var wateringHistory: List<String> = emptyList(),
 )
