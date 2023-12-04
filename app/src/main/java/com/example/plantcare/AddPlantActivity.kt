@@ -77,6 +77,7 @@ private const val IMG_NAME_KEY = "img_name_key"
 private const val RENDERED_PLANT_ENTRY = "rendered_plant_entry_key"
 private const val IMAGE_NAME_SET = "image_name_set_key"
 private const val TEMP_IMG_URI = "temp_img_uri_key"
+private const val SAVED_IMG_URI = "saved_img_uri_key"
 private const val DOB_TEXT_KEY = "dob_text_key"
 private const val BYTE_ARRAY_SIZE = 1024
 private const val ZERO = 0
@@ -99,7 +100,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private lateinit var cameraResult: ActivityResultLauncher<Intent>
     private lateinit var galleryResult: ActivityResultLauncher<Intent>
     private lateinit var tempImgFile: File
+    private lateinit var copyImgFile: File
     private lateinit var tempImgUri: Uri
+    private lateinit var copyImgUri: Uri
     private lateinit var imgToSave: Bitmap
     private lateinit var addPlantViewModel: AddPlantViewModel
     private lateinit var query: String
@@ -216,6 +219,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         outState.putString(IMG_NAME_KEY, imageName)
         outState.putString(DOB_TEXT_KEY, binding.dob.text.toString())
         outState.putLong(CALENDAR_TIME_MILLIS, calendarTimeMillis)
+        if(pageType == PLANT_VIEW){
+            outState.putString(SAVED_IMG_URI, copyImgUri.toString())
+        }
     }
 
     private fun setUpViewModel() {
@@ -363,7 +369,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if (externalFilesDir != null) {
             // Create a File for the temp image
             tempImgFile = File(externalFilesDir, imageName)
-
             if (!tempImgFile.exists()) {
                 // Convert the default image drawable to a Bitmap
                 val bitmap = defaultImageDrawable?.toBitmap()
@@ -464,6 +469,13 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                             tempImgFile
                         )
                     }
+                    copyImgFile = File(externalFilesDir, "copy_" + imageName)
+                    copyImgUri = FileProvider.getUriForFile(
+                        this,
+                        getString(R.string.com_example_plantcare),
+                        copyImgFile
+                    )
+                    copyImage(tempImgUri, copyImgUri)
                 } else {
                     Toast.makeText(
                         this,
@@ -531,6 +543,9 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
             imageName = savedInstanceState.getString(IMG_NAME_KEY, EMPTY_STRING)
             tempImgUri = Uri.parse(savedInstanceState.getString(TEMP_IMG_URI, EMPTY_STRING))
             calendarTimeMillis = savedInstanceState.getLong(CALENDAR_TIME_MILLIS, System.currentTimeMillis())
+            if(pageType == PLANT_VIEW) {
+                copyImgUri = Uri.parse(savedInstanceState.getString(SAVED_IMG_URI, EMPTY_STRING))
+            }
         }
     }
 
@@ -591,11 +606,22 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         }
     }
 
+    private fun goToDashboard() {
+        val signupActivityIntent = Intent(this, SignupActivity::class.java)
+        startActivity(signupActivityIntent)
+    }
+
     private fun initButtons() {
         // Back Button
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if(pageType == PLANT_VIEW) {
+                    if(copyImgUri != tempImgUri) {
+                        copyImage(copyImgUri, tempImgUri)
+                    }
+                }
                 cleanUp()
+                goToDashboard()
                 finish()
             }
         })
@@ -621,8 +647,14 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
         // Cancel Button
         binding.cancelButton.setOnClickListener {
-            finish()
+            if(pageType == PLANT_VIEW) {
+                if(copyImgUri != tempImgUri) {
+                    copyImage(copyImgUri, tempImgUri)
+                }
+            }
             cleanUp()
+            goToDashboard()
+            finish()
         }
 
         // Add / Update Buttons
@@ -644,12 +676,23 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if(pageType == PLANT_ADD){
             deleteImage()
         }
+        else {
+            deleteImageCopy()
+        }
     }
 
     private fun deleteImage() {
         if (tempImgFile.exists()) {
             tempImgFile.delete()
         } else {
+            Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
+        }
+    }
+
+    private fun deleteImageCopy() {
+        if(copyImgFile.exists()){
+            copyImgFile.delete()
+        }else {
             Log.d(getString(R.string.tag), getString(R.string.oops_missing_external_file_directory))
         }
     }
@@ -669,6 +712,8 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
 
                         if (plantId != null) {
                             userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry)
+                            deleteImageCopy()
+                            goToDashboard()
                             finish()
                         }
                     }
@@ -688,6 +733,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {
                 userRef.child(getString(R.string.plants_firebase_key)).child(plantId).setValue(plantEntry).await()
+                goToDashboard()
                 finish()
             }
         }
@@ -829,6 +875,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
         navigationView.setOnNavigationItemSelectedListener { item ->
             when (item.itemId) {
                 R.id.dashboard_home -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, DashboardActivity::class.java)
                     startActivity(intent)
@@ -836,6 +887,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
 
                 R.id.calender -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, ScheduleActivity::class.java)
                     startActivity(intent)
@@ -844,6 +900,11 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                 }
 
                 R.id.reminder -> {
+                    if(pageType == PLANT_VIEW) {
+                        if(copyImgUri != tempImgUri) {
+                            copyImage(copyImgUri, tempImgUri)
+                        }
+                    }
                     cleanUp()
                     val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)

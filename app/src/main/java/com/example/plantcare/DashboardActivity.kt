@@ -10,7 +10,6 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.widget.Button
 import android.widget.GridView
 import androidx.appcompat.app.AppCompatActivity
 import com.example.plantcare.databinding.ActivityDashboardBinding
@@ -28,7 +27,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-private const val EMPTY_STRING = ""
 class DashboardActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityDashboardBinding
@@ -64,7 +62,6 @@ class DashboardActivity : AppCompatActivity() {
 
         /* User's added Plants in gridView*/
         setUpGridItemAdapter()
-
 
         loadPlants()
 
@@ -152,7 +149,8 @@ class DashboardActivity : AppCompatActivity() {
                         val intent = Intent(this, AddPlantActivity::class.java)
                         intent.putExtra(getString(R.string.plant_page_type), AddPlantActivity.PLANT_ADD)
                         startActivity(intent)
-
+                        finish()
+                        
                         return@setOnNavigationItemSelectedListener true
                     }
                     R.id.calender -> {
