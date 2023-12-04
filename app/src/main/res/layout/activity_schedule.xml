@@ -16,125 +16,37 @@
         android:elevation="4dp"
         app:titleTextColor="?android:textColorPrimaryInverse" />
 
-    <CalendarView
+    <include
+        android:id="@+id/titlesContainer"
+        layout="@layout/calendar_day_titles_container"
+        android:layout_below="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.kizitonwose.calendar.view.CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/toolbar"/>
+        app:cv_dayViewResource="@layout/calendar_day_layout"
+        android:layout_below="@+id/titlesContainer"
+        app:cv_monthHeaderResource="@layout/calendar_day_titles_container"/>
 
     <TextView
         android:id="@+id/eventListTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/event_list_title"
+        android:layout_below="@+id/calendarView"
         android:layout_marginHorizontal="15dp"
-        android:textSize="20sp"
-        android:layout_below="@+id/calendarView" />
+        android:text="@string/event_list_title"
+        android:textSize="20sp" />
 
-
-    <ScrollView
+    <ListView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="15dp"
-        android:scrollbars="none"
-        android:layout_below="@+id/eventListTitle">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                xmlns:tools="http://schemas.android.com/tools"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:layout_editor_absoluteX="0dp"
-                tools:layout_editor_absoluteY="2dp">
-
-                <ImageView
-                    android:id="@+id/ivPlantPicSchedule"
-                    android:layout_width="115dp"
-                    android:layout_height="109dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:src="@drawable/default_plant_profile_pic"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvPlantNameSchedule"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="40dp"
-                    android:fontFamily="casual"
-                    android:text="Plant 1"
-                    android:letterSpacing="0.07"
-                    app:layout_constraintBottom_toBottomOf="@+id/ivPlantPicSchedule"
-                    app:layout_constraintEnd_toStartOf="@+id/btnWateringSchedule"
-                    app:layout_constraintHorizontal_bias="0.125"
-                    app:layout_constraintStart_toEndOf="@+id/ivPlantPicSchedule"
-                    app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule"
-                    app:layout_constraintVertical_bias="0.505" />
-
-                <Button
-                    android:id="@+id/btnWateringSchedule"
-                    android:layout_width="110dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:backgroundTint="#3C8A3F"
-                    android:text="Complete"
-                    app:layout_constraintBottom_toBottomOf="@+id/ivPlantPicSchedule"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                tools:layout_editor_absoluteX="0dp"
-                tools:layout_editor_absoluteY="2dp">
-
-                <ImageView
-                    android:id="@+id/ivPlantPicSchedule2"
-                    android:layout_width="115dp"
-                    android:layout_height="109dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:src="@drawable/default_plant_profile_pic"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvPlantNameSchedule2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="40dp"
-                    android:fontFamily="casual"
-                    android:text="Plant 2"
-                    android:letterSpacing="0.07"
-                    app:layout_constraintBottom_toBottomOf="@+id/ivPlantPicSchedule2"
-                    app:layout_constraintEnd_toStartOf="@+id/btnWateringSchedule2"
-                    app:layout_constraintHorizontal_bias="0.125"
-                    app:layout_constraintStart_toEndOf="@+id/ivPlantPicSchedule2"
-                    app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule2"
-                    app:layout_constraintVertical_bias="0.505" />
-
-                <Button
-                    android:id="@+id/btnWateringSchedule2"
-                    android:layout_width="110dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:backgroundTint="#7B817D"
-                    android:text="Done"
-                    app:layout_constraintBottom_toBottomOf="@+id/ivPlantPicSchedule2"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="@+id/ivPlantPicSchedule2" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-            </LinearLayout>
-    </ScrollView>
+        android:id="@+id/eventListView"
+        android:layout_below="@+id/eventListTitle"
+        android:layout_marginBottom="100dp"
+        />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:layout_width="match_parent"
@@ -142,7 +54,6 @@
         android:id="@+id/bottom_navigation"
         android:layout_alignParentBottom="true"
         android:layout_marginStart="15dp"
-        android:layout_marginTop="15dp"
         android:layout_marginEnd="15dp"
         android:layout_marginBottom="15dp"
         android:background="@drawable/bottom_navigation_round_corner"

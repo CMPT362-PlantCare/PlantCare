@@ -29,8 +29,13 @@ android {
         }
     }
     compileOptions {
+        // CV
+        // Enable support for the new language APIs
+        isCoreLibraryDesugaringEnabled = true
+        //
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
+
     }
     kotlinOptions {
         jvmTarget = "1.8"
@@ -61,5 +66,6 @@ dependencies {
     implementation("de.hdodenhof:circleimageview:3.1.0")
     implementation ("org.json:json:20231013")
     // calendarView
-//    implementation("com.kizitonwose.calendar:view:2.4.0")
+    implementation("com.kizitonwose.calendar:view:2.4.0")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
