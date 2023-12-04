@@ -14,8 +14,4 @@
         android:title="@string/calender_bottom_nav"
         android:icon="@drawable/calender_icon"/>
 
-    <item
-        android:id="@+id/reminder"
-        android:title="@string/reminder_bottom_nav"
-        android:icon="@drawable/reminder_icon"/>
 </menu>
