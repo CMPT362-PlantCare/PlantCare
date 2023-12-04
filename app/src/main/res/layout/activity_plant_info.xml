@@ -21,18 +21,16 @@
         android:layout_height="wrap_content">
 
         <LinearLayout
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:layout_margin="20dp">
 
             <ImageView
                 android:id="@+id/plant_image_view"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginLeft="10dp"
-                android:layout_marginRight="10dp"
-                android:layout_marginTop="-30dp"
-                android:layout_marginBottom="-30dp"/>
+                android:layout_height="400dp"
+                android:layout_gravity="center"/>
 
             <TextView
                 android:id="@+id/info_text_view"

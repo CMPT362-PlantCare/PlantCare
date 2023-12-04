@@ -5,5 +5,8 @@
     <color name="dark_green">#11321A</color>
     <color name="grey">#5C5C5C</color>
     <color name="green">#61F59E</color>
+    <color name="dot_colour">#956FFF</color>
+    <color name="today_colour">#D211321A</color>
+    <color name="selected_colour">#65AFAFAF</color>
     <color name="button_green">#3C8A3F</color>
 </resources>
