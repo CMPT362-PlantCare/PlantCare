@@ -16,23 +16,55 @@
         android:elevation="4dp"
         app:titleTextColor="?android:textColorPrimaryInverse" >
 
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/btnBack"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="@drawable/arrow_back"
+            android:backgroundTint="#FFF"
+            android:layout_margin="10dp"
+            />
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingLeft="30dp"
+            android:paddingLeft="2dp"
             android:paddingTop="10dp"
             android:paddingRight="10dp"
             android:paddingBottom="5dp"
-            android:textSize="20dp"
+            android:textSize="24dp"
             android:text="Care Reminders"
             android:textColor="@color/white"/>
+
     </androidx.appcompat.widget.Toolbar>
+
+    <!--<RadioGroup
+        android:id="@+id/Agroup"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        >
+        <RadioButton
+            android:id="@+id/radTodoo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="10dp"
+            android:text="Todo" />
+
+        <RadioButton
+            android:id="@+id/radDone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@+id/radTodo"
+            android:text="Done" />
+    </RadioGroup>
+    -->
 
     <GridView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/gridView"
-        android:numColumns="2"
+        android:numColumns="1"
         android:layout_below="@+id/calender_toolbar" />
 
     <com.google.android.material.bottomnavigation.BottomNavigationView

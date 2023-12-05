@@ -29,4 +29,6 @@ data class Plant(
 
     //"YYYY-MM-DD"
     var wateringHistory: List<String> = emptyList(),
+
+    var status:Int = 0,
 )

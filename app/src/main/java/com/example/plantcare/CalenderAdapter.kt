@@ -50,17 +50,18 @@ class CalenderAdapter(private val context: Context,
         var viewHolder: ViewHolder
         var view = convertView
         var isWateredToday = true
+        //var status = 0
 
         if(view == null){
             val inflater = (context as Activity).layoutInflater
-            view = inflater.inflate(R.layout.activity_calender_recycler_item, parent, false)
+            view = inflater.inflate(R.layout.activity_gridview_calender_item, parent, false)
 
             viewHolder = ViewHolder()
             viewHolder.relativeLayout = view!!.findViewById(R.id.expandableView)
             viewHolder.circularRevealCardView = view!!.findViewById(R.id.cardV)
             viewHolder.imageButton = view!!.findViewById(R.id.arrowBtn)
             viewHolder.imageButton2 = view!!.findViewById(R.id.watercan)
-            viewHolder.materialTextView = view!!.findViewById(R.id.status)
+            viewHolder.materialTextView = view!!.findViewById(R.id.txtwaterfreq)
 
             viewHolder.imageView = view!!.findViewById(R.id.plantImage)
             viewHolder.textView = view!!.findViewById(R.id.plantName)
@@ -118,6 +119,10 @@ class CalenderAdapter(private val context: Context,
         }
 
         viewHolder.textView!!.text = plantEntryList[position].plantName
+        val wfreq = plantEntryList[position].wateringFreq.toString()
+        val waterFreq = "In " + wfreq  + " days / Every " +  wfreq + " days"
+        viewHolder.materialTextView!!.text = waterFreq
+
 
         viewHolder.imageButton!!.setOnClickListener { view ->
             // If the CardView is already expanded, set its visibility
@@ -145,11 +150,12 @@ class CalenderAdapter(private val context: Context,
             if (isWateredToday) {
                 //val bgcolor = ContextCompat.getColor(R.color.grey)
                 viewHolder.imageButton2!!.setBackgroundResource(R.drawable.tickk);
-                viewHolder.materialTextView!!.setText("All done")
-                viewHolder.materialTextView!!.setBackgroundColor(R.color.green)
+                plantEntryList[position].status = 1
+                viewHolder.circularRevealCardView!!.setVisibility(View.GONE)
+
             } else {
                 viewHolder.imageButton2!!.setBackgroundResource(R.drawable.wateringcan);
-                viewHolder.materialTextView!!.setText("todo")
+                plantEntryList[position].status = 0
             }
 
             //isWateredToday = !isWateredToday; // reverse

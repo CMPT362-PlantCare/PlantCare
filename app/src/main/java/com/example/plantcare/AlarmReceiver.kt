@@ -34,7 +34,7 @@ class AlarmReceiver: BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
 
-        firebaseAuth = Firebase.auth
+        /*firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
 
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
@@ -62,8 +62,8 @@ class AlarmReceiver: BroadcastReceiver() {
                     Log.w("TAG", "Failed to read value.", error.toException())
                 }
             })
-        }
-
+        }*/
+        sendNotification(context)
     }
 
     private fun sendNotification(context: Context) {
