@@ -11,7 +11,6 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="com.android.alarm.permission.SET_ALARM" />
 
-
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -22,14 +21,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PlantCare"
         tools:targetApi="31">
+        <activity
+            android:name=".SignupActivity"
+            android:exported="false" />
+
         <meta-data
             android:name="PLANT_API_KEY"
-            android:value="${PLANT_API_KEY}"/>
+            android:value="sk-DtSE65602b5ba0a993104" />
 
-        <activity android:name=".PlantInfoActivity"
-            android:exported="false"/>
-        <activity android:name=".ScheduleActivity"
-            android:exported="false"/>
+        <activity
+            android:name=".PlantInfoActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ScheduleActivity"
+            android:exported="false" />
         <activity
             android:name=".CalenderActivity"
             android:exported="false" />
@@ -43,7 +48,7 @@
             android:name=".LoginActivity"
             android:exported="false" />
         <activity
-            android:name=".SignupActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -64,7 +69,7 @@
 
         <receiver
             android:name=".AlarmReceiver"
-            android:enabled="true"/>
-
+            android:enabled="true" />
     </application>
+
 </manifest>

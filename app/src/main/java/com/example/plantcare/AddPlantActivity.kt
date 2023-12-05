@@ -74,6 +74,8 @@ private const val TEMP_IMG_URI = "temp_img_uri_key"
 private const val BYTE_ARRAY_SIZE = 1024
 private const val FILE_COPY_OFFSET = 0
 
+private const val PLANT_API_KEY = "sk-DtSE65602b5ba0a993104"
+
 class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     companion object {
         const val PLANT_ADD = 0
@@ -578,7 +580,7 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     inner class MyRunnable : Runnable {
         override fun run() {
             try {
-                val apiKey =  BuildConfig.PLANT_API_KEY
+                val apiKey =  PLANT_API_KEY
                 val url = URL("https://perenual.com/api/species-list?key=$apiKey&q=$query")
 
                 with(url.openConnection() as HttpURLConnection) {

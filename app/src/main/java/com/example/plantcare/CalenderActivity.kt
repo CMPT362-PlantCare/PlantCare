@@ -1,23 +1,14 @@
 package com.example.plantcare
 
-
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.widget.GridView
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.RelativeLayout
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.RecyclerView
-import androidx.transition.AutoTransition
-import androidx.transition.TransitionManager
 import com.example.plantcare.databinding.ActivityCalenderBinding
-import com.google.android.material.circularreveal.cardview.CircularRevealCardView
-import com.google.android.material.textview.MaterialTextView
+import com.google.android.material.button.MaterialButtonToggleGroup
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DataSnapshot
@@ -38,14 +29,18 @@ class CalenderActivity : AppCompatActivity() {
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var calenderAdapter: CalenderAdapter
     private lateinit var plantEntryList: ArrayList<Plant>
-
+    private lateinit var btnBack: MaterialButtonToggleGroup
     private lateinit var gridView: GridView
     private lateinit var firebaseDatabase: FirebaseDatabase
     private lateinit var userRef: DatabaseReference
+    private lateinit var plantRef:DatabaseReference
 
+    private lateinit var Agroup: RadioGroup
+    private lateinit var todoo: RadioButton
+    private lateinit var done:RadioButton
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        var status = 0;
         binding = ActivityCalenderBinding.inflate(layoutInflater)
         setContentView(binding.root)
         setSupportActionBar(findViewById(R.id.calender_toolbar))
@@ -54,7 +49,24 @@ class CalenderActivity : AppCompatActivity() {
         firebaseDatabase = Firebase.database
         userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
         gridView = binding.gridView
-
+        btnBack = findViewById(R.id.btnBack)
+        btnBack.setOnClickListener(View.OnClickListener { finish() })
+      /*  Agroup = findViewById(R.id.Agroup)
+        todoo = findViewById<RadioButton>(R.id.radTodoo)
+        done = findViewById<RadioButton>(R.id.radDone)
+        val radioLsnr = View.OnClickListener { v ->
+            val slktd = findViewById<View>(v.id) as RadioButton
+            if (slktd.text == "Todo") {
+                status = 0
+                fetchPlants()
+            }
+            if (slktd.text == "Done") {
+                status = 1
+                fetchPlants()
+            }
+        }
+        todoo.setOnClickListener(radioLsnr)
+        done.setOnClickListener(radioLsnr)*/
 
         setUpCalenderAdapter()
         fetchPlants()
