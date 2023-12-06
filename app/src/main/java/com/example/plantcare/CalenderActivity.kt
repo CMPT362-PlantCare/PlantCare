@@ -59,22 +59,6 @@ class CalenderActivity : AppCompatActivity() {
         btnBack.setOnClickListener {
             finish()
         }
-        /*  Agroup = findViewById(R.id.Agroup)
-          todoo = findViewById<RadioButton>(R.id.radTodoo)
-          done = findViewById<RadioButton>(R.id.radDone)
-          val radioLsnr = View.OnClickListener { v ->
-              val slktd = findViewById<View>(v.id) as RadioButton
-              if (slktd.text == "Todo") {
-                  status = 0
-                  fetchPlants()
-              }
-              if (slktd.text == "Done") {
-                  status = 1
-                  fetchPlants()
-              }
-          }
-          todoo.setOnClickListener(radioLsnr)
-          done.setOnClickListener(radioLsnr)*/
 
         setUpCalenderAdapter()
         fetchPlants()
@@ -97,7 +81,7 @@ class CalenderActivity : AppCompatActivity() {
 
     private fun fetchPlants() {
         CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
+            userRef.child(getString(R.string.plants_firebase_key)).addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val plantEntryList = mutableListOf<Plant>()
 
@@ -113,7 +97,7 @@ class CalenderActivity : AppCompatActivity() {
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
+                    Log.w(getString(R.string.tag), getString(R.string.failed_to_read_value), error.toException())
                 }
             })
         }

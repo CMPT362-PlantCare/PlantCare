@@ -1,87 +1,86 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
     android:animateLayoutChanges="true"
-    tools:context=".MainActivity"
     android:background="@drawable/grad_bg"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
 
-    >
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true">
 
-
         <ImageView
             android:id="@+id/logoImgview"
             android:layout_width="wrap_content"
             android:layout_height="150dp"
-            android:src="@drawable/plant_1"
-            android:layout_marginBottom="32dp"
             android:layout_centerHorizontal="true"
+            android:layout_marginBottom="32dp"
+            android:src="@drawable/plant_1"
             android:textColor="#FFFFFF"
-            android:textSize="90dp"
-            android:text="BB"
+            android:textSize="90sp"
             android:transitionName="imgs_transition" />
+
         <TextView
-            android:layout_below="@+id/logoImgview"
             android:id="@+id/txtview"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_below="@+id/logoImgview"
+            android:layout_centerHorizontal="true"
             android:layout_gravity="center"
             android:layout_marginTop="5dp"
-            android:transitionName="txtview_transition"
             android:layout_marginBottom="30dp"
-            android:layout_centerHorizontal="true"
-            android:text="Plant Care"
+            android:text="@string/plant_care_splash_screen_title"
             android:textColor="#FFFFFF"
+            android:textSize="35sp"
             android:textStyle="bold"
-            android:textSize="35dp"
-            />
+            android:transitionName="txtview_transition" />
+
         <RelativeLayout
             android:id="@+id/rellay1"
-            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/txtview">
+            android:layout_below="@+id/txtview"
+            android:visibility="gone">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                >
+                android:orientation="vertical">
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnSignup"
-                    android:layout_margin="10dp"
-                    app:rippleColor="#00C853"
-                    app:backgroundTint="@color/dark_green"
-                    android:background="@drawable/border2"
-                    android:textAllCaps="true"
                     android:layout_width="match_parent"
                     android:layout_height="45dp"
-                    android:text="SignUp"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/border2"
                     android:fontFamily="sans-serif-black"
+                    android:text="@string/sign_up"
                     android:textAlignment="center"
-                    android:textSize="20dp"
-                    android:textColor="#FFFFFF"/>
+                    android:textAllCaps="true"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    app:backgroundTint="@color/dark_green"
+                    app:rippleColor="#00C853" />
+
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btnLogin"
-                    android:layout_margin="10dp"
-                    app:rippleColor="#00C853"
-                    app:backgroundTint="@color/dark_green"
-                    android:background="@drawable/border2"
-                    android:textAllCaps="true"
                     android:layout_width="match_parent"
                     android:layout_height="45dp"
-                    android:text="Login"
+                    android:layout_margin="10dp"
+                    android:background="@drawable/border2"
                     android:fontFamily="sans-serif-black"
+                    android:text="@string/login"
                     android:textAlignment="center"
-                    android:textSize="20dp"
-                    android:textColor="#FFFFFF"/>
+                    android:textAllCaps="true"
+                    android:textColor="#FFFFFF"
+                    android:textSize="20sp"
+                    app:backgroundTint="@color/dark_green"
+                    app:rippleColor="#00C853" />
 
             </LinearLayout>
 

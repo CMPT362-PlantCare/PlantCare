@@ -58,13 +58,13 @@ class CalenderAdapter(private val context: Context,
 
             viewHolder = ViewHolder()
             viewHolder.relativeLayout = view!!.findViewById(R.id.expandableView)
-            viewHolder.circularRevealCardView = view!!.findViewById(R.id.cardV)
-            viewHolder.imageButton = view!!.findViewById(R.id.arrowBtn)
-            viewHolder.imageButton2 = view!!.findViewById(R.id.watercan)
-            viewHolder.materialTextView = view!!.findViewById(R.id.txtwaterfreq)
+            viewHolder.circularRevealCardView = view.findViewById(R.id.cardV)
+            viewHolder.imageButton = view.findViewById(R.id.arrowBtn)
+            viewHolder.imageButton2 = view.findViewById(R.id.watercan)
+            viewHolder.materialTextView = view.findViewById(R.id.txtwaterfreq)
 
-            viewHolder.imageView = view!!.findViewById(R.id.plantImage)
-            viewHolder.textView = view!!.findViewById(R.id.plantName)
+            viewHolder.imageView = view.findViewById(R.id.plantImage)
+            viewHolder.textView = view.findViewById(R.id.plantName)
 
 
             view.tag = viewHolder
@@ -120,14 +120,14 @@ class CalenderAdapter(private val context: Context,
 
         viewHolder.textView!!.text = plantEntryList[position].plantName
         val wfreq = plantEntryList[position].wateringFreq.toString()
-        val waterFreq = "In " + wfreq  + " days / Every " +  wfreq + " days"
+        val waterFreq = context.getString(R.string.in_days_every__x_days, wfreq, wfreq)
         viewHolder.materialTextView!!.text = waterFreq
 
 
         viewHolder.imageButton!!.setOnClickListener { view ->
             // If the CardView is already expanded, set its visibility
             // to gone and change the expand less icon to expand more.
-            if (viewHolder.relativeLayout!!.getVisibility() === View.VISIBLE) {
+            if (viewHolder.relativeLayout!!.visibility == View.VISIBLE) {
                 // The transition of the hiddenView is carried out by the TransitionManager class.
                 // Here we use an object of the AutoTransition Class to create a default transition
                 TransitionManager.beginDelayedTransition(
@@ -151,7 +151,7 @@ class CalenderAdapter(private val context: Context,
                 //val bgcolor = ContextCompat.getColor(R.color.grey)
                 viewHolder.imageButton2!!.setBackgroundResource(R.drawable.tickk);
                 plantEntryList[position].status = 1
-                viewHolder.circularRevealCardView!!.setVisibility(View.GONE)
+                viewHolder.circularRevealCardView!!.visibility = View.GONE
 
             } else {
                 viewHolder.imageButton2!!.setBackgroundResource(R.drawable.wateringcan);

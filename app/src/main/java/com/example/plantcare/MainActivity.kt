@@ -30,9 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivitySignupBinding
     private lateinit var firebaseAuth: FirebaseAuth
     private lateinit var firebaseDatabase: FirebaseDatabase
-    //Variables
     private lateinit var rellay1: RelativeLayout
-    private lateinit var dlg2: AlertDialog
     private lateinit var topAnim: Animation
     private lateinit var bottomAnim: Animation
     private lateinit var txtview: TextView
@@ -47,6 +45,9 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
         firebaseAuth = Firebase.auth
         firebaseDatabase = Firebase.database
+
+        handleUserAlreadyLoggedIn()
+
         window.setFlags(
             WindowManager.LayoutParams.FLAG_FULLSCREEN,
             WindowManager.LayoutParams.FLAG_FULLSCREEN
@@ -71,12 +72,12 @@ class MainActivity : AppCompatActivity() {
         handler.postDelayed(runnable,1000)
         val radioLsnr = View.OnClickListener { v ->
             val slktdbtn = findViewById<View>(v.id) as MaterialButton
-            if (slktdbtn.text == "SignUp") {
-                val intent = Intent(this@MainActivity, SignupActivity::class.java)
+            if (slktdbtn.text == getString(R.string.sign_up)) {
+                val intent = Intent(this, SignupActivity::class.java)
                 startActivity(intent)
             }
-            if (slktdbtn.text == "Login") {
-                val intent = Intent(this@MainActivity, LoginActivity::class.java)
+            if (slktdbtn.text == getString(R.string.login)) {
+                val intent = Intent(this, LoginActivity::class.java)
                 startActivity(intent)
             }
 
@@ -85,6 +86,18 @@ class MainActivity : AppCompatActivity() {
         btnSignup.setOnClickListener(radioLsnr)
         btnLogin.setOnClickListener(radioLsnr)
 
+    }
+
+    private fun handleUserAlreadyLoggedIn() {
+        if (firebaseAuth.currentUser != null) {
+            firebaseAuth.currentUser.let { user ->
+                if (user != null) {
+                    val dashboardActivityIntent = Intent(this, DashboardActivity::class.java)
+                    startActivity(dashboardActivityIntent)
+                    finish()
+                }
+            }
+        }
     }
 
 }
