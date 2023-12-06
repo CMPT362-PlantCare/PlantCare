@@ -728,7 +728,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun savePlantToDatabase() {
         val plantEntry = Plant()
         setPlantEntryAttributes(plantEntry)
-        plantEntry.lastWateredDate = System.currentTimeMillis()
         val plantId = userRef.child(getString(R.string.plants_firebase_key)).push().key
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {

@@ -5,10 +5,8 @@ import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
 
-private const val PLANT_API_KEY = "sk-DtSE65602b5ba0a993104"
-
 object Helpers {
-    private const val apiKey =  PLANT_API_KEY
+    private const val apiKey =  BuildConfig.PLANT_API_KEY
 
     //    returns watering frequency in days
     fun getWateringFreq(speciesId: String): String {
@@ -39,7 +37,7 @@ object Helpers {
 
     fun getCareGuide(speciesId: String): JSONArray {
         var sections = JSONArray()
-        val apiKey = PLANT_API_KEY
+        val apiKey = BuildConfig.PLANT_API_KEY
         val url = URL("https://perenual.com/api/species-care-guide-list?species_id=$speciesId&key=$apiKey")
 
         val apiCall = Thread {
