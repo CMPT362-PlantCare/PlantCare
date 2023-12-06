@@ -10,7 +10,6 @@ import android.widget.ImageView
 import android.widget.RelativeLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.plantcare.databinding.ActivitySignupBinding
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
