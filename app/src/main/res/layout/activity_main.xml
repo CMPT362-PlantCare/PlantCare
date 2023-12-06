@@ -81,12 +81,9 @@
                     android:textSize="20sp"
                     app:backgroundTint="@color/dark_green"
                     app:rippleColor="#00C853" />
-
             </LinearLayout>
 
-
         </RelativeLayout>
-
 
     </RelativeLayout>
 
