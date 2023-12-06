@@ -23,51 +23,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
+private const val NOTIFY_ID = 100
+private const val CHANNEL_ID = "water reminder notification channel"
 class AlarmReceiver: BroadcastReceiver() {
-
-    private val NOTIFY_ID = 100
-    private val CHANNEL_ID = "water reminder notification channel"
-    private lateinit var firebaseAuth: FirebaseAuth
-    private lateinit var firebaseDatabase: FirebaseDatabase
-    private lateinit var userRef: DatabaseReference
-
-
     override fun onReceive(context: Context, intent: Intent) {
-
-        firebaseAuth = Firebase.auth
-        firebaseDatabase = Firebase.database
-
-        userRef = firebaseDatabase.reference.child("Users").child(firebaseAuth.currentUser?.uid!!)
-
-        CoroutineScope(Dispatchers.IO).launch {
-            userRef.child("plants").addValueEventListener(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val plantEntryList = mutableListOf<Plant>()
-
-                    for (plantSnapshot in snapshot.children) {
-                        val plantEntry = plantSnapshot.getValue(Plant::class.java)
-                        if (plantEntry != null) {
-                            plantEntryList.add(plantEntry)
-                        }
-                    }
-
-                    for (plant in plantEntryList) {
-                        if (daysBetweenDates(plant.lastWateredDate!!) >= plant.wateringFreq) {
-                            sendNotification(context)
-                        }
-                    }
-                }
-
-                override fun onCancelled(error: DatabaseError) {
-                    Log.w("TAG", "Failed to read value.", error.toException())
-                }
-            })
-        }
-
+        sendNotification(context)
     }
 
     private fun sendNotification(context: Context) {
-        val notificationIntent = Intent(context, CalenderActivity::class.java)
+        val notificationIntent = Intent(context, ScheduleActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -98,18 +62,6 @@ class AlarmReceiver: BroadcastReceiver() {
         }
 
         notificationManager.notify(NOTIFY_ID, notification)
-    }
-
-    private fun daysBetweenDates(lastWatered: Long): Int {
-        val currentTime = System.currentTimeMillis()
-        var days = 0
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-
-            val differenceInMillis = currentTime - lastWatered
-            days = TimeUnit.MILLISECONDS.toDays(differenceInMillis).toInt()
-        }
-        return days
     }
 }
 

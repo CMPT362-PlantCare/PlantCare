@@ -728,7 +728,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
     private fun savePlantToDatabase() {
         val plantEntry = Plant()
         setPlantEntryAttributes(plantEntry)
-        plantEntry.lastWateredDate = System.currentTimeMillis()
         val plantId = userRef.child(getString(R.string.plants_firebase_key)).push().key
         if (plantId != null) {
             CoroutineScope(Dispatchers.IO).launch {
@@ -894,19 +893,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     }
                     cleanUp()
                     val intent = Intent(this, ScheduleActivity::class.java)
-                    startActivity(intent)
-
-                    return@setOnNavigationItemSelectedListener true
-                }
-
-                R.id.reminder -> {
-                    if(pageType == PLANT_VIEW) {
-                        if(copyImgUri != tempImgUri) {
-                            copyImage(copyImgUri, tempImgUri)
-                        }
-                    }
-                    cleanUp()
-                    val intent = Intent(this, CalenderActivity::class.java)
                     startActivity(intent)
 
                     return@setOnNavigationItemSelectedListener true

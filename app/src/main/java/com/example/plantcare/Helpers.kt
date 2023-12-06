@@ -37,7 +37,7 @@ object Helpers {
 
     fun getCareGuide(speciesId: String): JSONArray {
         var sections = JSONArray()
-        val apiKey =  BuildConfig.PLANT_API_KEY
+        val apiKey = BuildConfig.PLANT_API_KEY
         val url = URL("https://perenual.com/api/species-care-guide-list?species_id=$speciesId&key=$apiKey")
 
         val apiCall = Thread {

@@ -90,5 +90,7 @@
     <string name="plant_info_sunlight">Sunlight:\n</string>
     <string name="plant_info_pruning">Pruning:\n</string>
     <string name="complete">Complete</string>
+    <string name="in_days_every__x_days">In %1$s days / Every %2$s days</string>
+    <string name="plant_care_splash_screen_title">Plant Care</string>
 
 </resources>
