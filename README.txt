@@ -6,6 +6,13 @@ The design for the Main Activity was adapted from: https://www.geeksforgeeks.org
 
 All other implementations were carried out by following the lecture notes, demos, and the official Android Developer documentation: https://developer.android.com/docs.
 
+Here are the citations for the Navigation Tile:
+https://www.youtube.com/watch?v=JjfSjMs0ImQ
+https://www.youtube.com/watch?v=y4arA4hsok8&t=3s
+https://stackoverflow.com/questions/43870485/how-to-handle-bottom-navigation-perfectly-with-back-pressed
+https://www.usna.edu/Users/cs/adina/teaching/it472/spring2020/course/page.php?shortname=mobileos&id=19
+https://stackoverflow.com/questions/4562757/alarmmanager-android-every-day
+
 =====================================================
 
 The library used to create the calendar on the Calendar page: https://github.com/kizitonwose/Calendar
