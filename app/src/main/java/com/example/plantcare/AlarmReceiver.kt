@@ -31,7 +31,7 @@ class AlarmReceiver: BroadcastReceiver() {
     }
 
     private fun sendNotification(context: Context) {
-        val notificationIntent = Intent(context, CalenderActivity::class.java)
+        val notificationIntent = Intent(context, ScheduleActivity::class.java)
         notificationIntent.flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         val pendingIntent = PendingIntent.getActivity(
             context,

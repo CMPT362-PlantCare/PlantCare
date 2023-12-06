@@ -899,19 +899,6 @@ class AddPlantActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener
                     return@setOnNavigationItemSelectedListener true
                 }
 
-                R.id.reminder -> {
-                    if(pageType == PLANT_VIEW) {
-                        if(copyImgUri != tempImgUri) {
-                            copyImage(copyImgUri, tempImgUri)
-                        }
-                    }
-                    cleanUp()
-                    val intent = Intent(this, CalenderActivity::class.java)
-                    startActivity(intent)
-
-                    return@setOnNavigationItemSelectedListener true
-                }
-
                 else -> false
             }
         }

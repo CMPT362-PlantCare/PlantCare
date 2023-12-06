@@ -159,12 +159,6 @@ class DashboardActivity : AppCompatActivity() {
 
                         return@setOnNavigationItemSelectedListener true
                     }
-                    R.id.reminder -> {
-                        val intent = Intent(this, CalenderActivity::class.java)
-                        startActivity(intent)
-
-                        return@setOnNavigationItemSelectedListener true
-                    }
                     else -> false
                 }
         }
