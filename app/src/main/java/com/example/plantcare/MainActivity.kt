@@ -74,5 +74,6 @@ class MainActivity : AppCompatActivity() {
     private fun <T : Any> startActivity(activityClass: Class<T>) {
         val intent = Intent(this, activityClass)
         startActivity(intent)
+        finish()
     }
 }
